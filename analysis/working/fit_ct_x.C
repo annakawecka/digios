@@ -38,8 +38,8 @@ void fit_ct_x(){
   //========================================= read data files
 
   TChain * chain = new TChain("tree");
-  chain->Add("trace_run055-066.root"); // 17O
-  //chain->Add("trace_run022-052.root"); // 17F
+  //chain->Add("trace_run055-066.root"); // 17O
+  chain->Add("trace_run022-052.root"); // 17F
 
   //========================================= detector geometry
   printf("======================= loading parameters files .... \n");
@@ -125,11 +125,11 @@ void fit_ct_x(){
 
   }
 
-  cCoinTimeX->SaveAs(Form("coinTime_x_17O.pdf"));
-  cCoinTimeX->SaveAs(Form("coinTime_x_17O.png"));
+  //cCoinTimeX->SaveAs(Form("coinTime_x_17O.pdf"));
+  //cCoinTimeX->SaveAs(Form("coinTime_x_17O.png"));
 
-  //cCoinTimeX->SaveAs(Form("coinTime_x_17F.pdf"));
-  //cCoinTimeX->SaveAs(Form("coinTime_x_17F.png"));
+  cCoinTimeX->SaveAs(Form("coinTime_x_17F.pdf"));
+  cCoinTimeX->SaveAs(Form("coinTime_x_17F.png"));
 
   for (int i = 0; i < nDet; i++) {
     TString canvasName;
@@ -184,7 +184,8 @@ void fit_ct_x(){
       cSingleDet->Modified();
       cSingleDet->Update();
 
-      cSingleDet->SaveAs(Form("coinTime_x_17O_Det%d_withFit.png", i));
+      //cSingleDet->SaveAs(Form("coinTime_x_17O_Det%d_withFit.png", i));
+      cSingleDet->SaveAs(Form("coinTime_x_17F_Det%d_withFit.png", i));
 
       canvasName.Form("cSingleDetCorr%d", i);
       TCanvas *cSingleDetCorr = new TCanvas(canvasName, canvasName, 800, 800);
