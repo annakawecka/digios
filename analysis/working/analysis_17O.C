@@ -27,6 +27,8 @@ int numCut;
 TCutG* cutG;
 
 bool rdtgate = false;
+bool xgate = false;
+bool cointimegate = false;
 
 const int nDet = 24;
 
@@ -105,15 +107,26 @@ void analysis_17O(){
   chain->Add("trace_run055-066.root");
 
   std::vector<TH1F*> correctedCoinTime;
+  std::vector<TH1F*> correctedCoinTimeXgate;
   std::vector<TH1F*> correctedCoinTimeRDTCoin;
+  std::vector<TH1F*> correctedCoinTimeXgateRDTCoin;
   std::vector<TH2F*> recoilDEE;
+
+  TH1F* x_rdt_coinTime_gatedEx = new TH1F("x_rdt_coinTime_gatedEx", "Ex gated on x, recoils and coinTime", 200, -2, 12);
+  TH1F* rdt_coinTime_gatedEx = new TH1F("rdt_coinTime_gatedEx", "Ex gated on recoils and coinTime", 200, -2, 12);
+  TH1F* coinTime_gatedEx = new TH1F("coinTime_gatedEx", "Ex gated on coinTime", 200, -2, 12);
+  TH1F* rdt_gatedEx = new TH1F("rdt_gatedEx", "Ex gated on recoils", 200, -2, 12);
 
   for (int i = 0; i < nDet; ++i) {
     TString histName;
     histName.Form("corrected_coinTime_det%d", i);
     correctedCoinTime.push_back(new TH1F(histName, histName, 400, -100, 200));
+    histName.Form("corrected_coinTime_det%d_x_gate", i);
+    correctedCoinTimeXgate.push_back(new TH1F(histName, histName, 400, -100, 200));
     histName.Form("corrected_coinTime_det%d_rdt_coincidence", i);
     correctedCoinTimeRDTCoin.push_back(new TH1F(histName, histName, 400, -100, 200));
+    histName.Form("corrected_coinTime_det%d_x_gate_rdt_coincidence", i);
+    correctedCoinTimeXgateRDTCoin.push_back(new TH1F(histName, histName, 400, -100, 200));
   }
 
   for (int i = 0; i < 4; ++i) {
@@ -136,6 +149,8 @@ void analysis_17O(){
   Long64_t nEntries = chain->GetEntries();
   for (Long64_t i = 0; i < nEntries; i++) {
     rdtgate = false;
+    xgate = false;
+    cointimegate = false;
 
     chain->GetEntry(i);
 
@@ -145,11 +160,13 @@ void analysis_17O(){
 	if(cutG->IsInside(rdt[2*i],rdt[2*i+1])) {
 	  rdtgate = true;
 	  recoil_n = 2*i;
-	  //recoilDEE[i]->Fill(rdt[2*i], rdt[2*i+1]);
 	  break; /// only one is enough
 	}
       }
     }
+
+    if ( x[detID] < 0.95 && x[detID] > -0.95)
+      xgate = true;
 
     if ( fitParams[detID].size() == 3 ) {
       coinTimeCorr = coinTime - ( fitParams[detID][0] + fitParams[detID][1] * x[detID] + fitParams[detID][2] * TMath::Power(x[detID], 2) );
@@ -163,13 +180,34 @@ void analysis_17O(){
       continue;
     }
 
+    if (coinTimeCorr > -20 && coinTimeCorr < 15) {
+      cointimegate = true;
+
+      coinTime_gatedEx->Fill(Ex);
+    }
+
     correctedCoinTime[detID]->Fill(coinTimeCorr);
     n_coin++;
+
+    if (xgate)
+      correctedCoinTimeXgate[detID]->Fill(coinTimeCorr);
 
     if (rdtgate) {
       correctedCoinTimeRDTCoin[detID]->Fill(coinTimeCorr);
       recoilDEE[recoil_n/2]->Fill(rdt[recoil_n], rdt[recoil_n+1]);
       n_coin_rdt++;
+
+      rdt_gatedEx->Fill(Ex);
+    }
+
+    if (rdtgate && cointimegate)
+      rdt_coinTime_gatedEx->Fill(Ex);
+
+    if (xgate && rdtgate) {
+      correctedCoinTimeXgateRDTCoin[detID]->Fill(coinTimeCorr);
+
+      if (cointimegate)
+	x_rdt_coinTime_gatedEx->Fill(Ex);
     }
 
   }
@@ -182,7 +220,17 @@ void analysis_17O(){
     correctedCoinTime[i]->Draw();
   }
 
-  cAllDetectors->SaveAs("Corrected_CoinTime_AllDetectors.png");
+  cAllDetectors->SaveAs("17O_analysis/Corrected_CoinTime_AllDetectors.png");
+
+  TCanvas *cAllDetectorsXgate = new TCanvas("cAllDetectorsXgate", "Corrected CoinTime for All Detectors with x gate", 1200, 800);
+  cAllDetectorsXgate->Divide(6, 4);
+
+  for (int i = 0; i < nDet; ++i) {
+    cAllDetectorsXgate->cd(i + 1);
+    correctedCoinTimeXgate[i]->Draw();
+  }
+
+  cAllDetectorsXgate->SaveAs("17O_analysis/Corrected_CoinTime_AllDetectors_Xgate.png");
 
   TCanvas *cAllDetectorsRDT = new TCanvas("cAllDetectorsRDT", "Corrected CoinTime for All Detectors (RDT coin)", 1200, 800);
   cAllDetectorsRDT->Divide(6, 4);
@@ -192,7 +240,17 @@ void analysis_17O(){
     correctedCoinTimeRDTCoin[i]->Draw();
   }
 
-  cAllDetectorsRDT->SaveAs("Corrected_CoinTime_AllDetectors_RDTCoin.png");
+  cAllDetectorsRDT->SaveAs("17O_analysis/Corrected_CoinTime_AllDetectors_RDTCoin.png");
+
+  TCanvas *cAllDetectorsXgateRDT = new TCanvas("cAllDetectorsXgateRDT", "Corrected CoinTime for All Detectors (RDT coin && x gate)", 1200, 800);
+  cAllDetectorsXgateRDT->Divide(6, 4);
+
+  for (int i = 0; i < nDet; ++i) {
+    cAllDetectorsXgateRDT->cd(i + 1);
+    correctedCoinTimeXgateRDTCoin[i]->Draw();
+  }
+
+  cAllDetectorsRDT->SaveAs("17O_analysis/Corrected_CoinTime_AllDetectors_XgateRDTCoin.png");
 
   std::cout << "coin: " << n_coin << " coin_rdt: " << n_coin_rdt << std::endl;
 
@@ -204,5 +262,31 @@ void analysis_17O(){
     recoilDEE[i]->Draw();
   }
 
-  cRDT->SaveAs("RDT_DEE_gated.png");
+  cRDT->SaveAs("17O_analysis/RDT_DEE_gated.png");
+
+  TH1F *combinedHist = (TH1F*)correctedCoinTimeXgateRDTCoin[0]->Clone("combinedHist");
+  combinedHist->Reset();
+  for (int i = 0; i < nDet; ++i) {
+    combinedHist->Add(correctedCoinTimeXgateRDTCoin[i]);
+  }
+
+  TCanvas *cCombined = new TCanvas("cCombined", "Combined Corrected CoinTime with recoil && x gate", 800, 600);
+  combinedHist->Draw();
+  cCombined->SaveAs("17O_analysis/Combined_Corrected_CoinTime_XgateRDTCoin.png");
+
+  TCanvas *cGatedEx = new TCanvas("cGatedEx", "Ex gated on x, recoils and coinTime", 800, 600);
+  x_rdt_coinTime_gatedEx->Draw();
+  cGatedEx->SaveAs("17O_analysis/Ex_x_recoil_coinTime_gated.png");
+
+  TCanvas *cRDTCoinTimeGatedEx = new TCanvas("cRDTCoinTimeGatedEx", "Ex gated on recoils and coinTime", 800, 600);
+  rdt_coinTime_gatedEx->Draw();
+  cRDTCoinTimeGatedEx->SaveAs("17O_analysis/Ex_recoil_coinTime_gated.png");
+
+  TCanvas *cCoinTimeGatedEx = new TCanvas("cCoinTimeGatedEx", "Ex gated on coinTime", 800, 600);
+  coinTime_gatedEx->Draw();
+  cCoinTimeGatedEx->SaveAs("17O_analysis/Ex_coinTime_gated.png");
+
+  TCanvas *cRDTGatedEx = new TCanvas("cRDTGatedEx", "Ex gated on rdt", 800, 600);
+  rdt_gatedEx->Draw();
+  cRDTGatedEx->SaveAs("17O_analysis/Ex_rdt_gated.png");
 }
