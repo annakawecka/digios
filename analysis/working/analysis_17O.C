@@ -1,22 +1,4 @@
-#include <TFile.h>
-#include <TTree.h>
-#include <TCanvas.h>
-#include <TROOT.h>
-#include <TSystem.h>
-#include <TStyle.h>
-#include <TProfile.h>
-#include <TH2F.h>
-#include <TH1F.h>
-#include <TF1.h>
-#include <TMath.h>
-#include <TSpectrum.h>
-#include <TGraph.h>
-#include <fstream>
-#include "../Armory/AnalysisLibrary.h"
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <vector>
+#include "utilities.h"
 
 #define N 5
 
@@ -31,8 +13,6 @@ TCutG* cutG;
 bool rdtgate = false;
 bool xgate = false;
 bool cointimegate = false;
-
-const int nDet = 24;
 
 int n_coin = 0;
 int n_coin_rdt = 0;
@@ -63,75 +43,7 @@ bool fitting = false;
 
 std::ifstream file;
 
-void readFitParameters(const TString &fileName, std::vector<std::vector<double>> &params) {
-  std::ifstream inFile(fileName);
-  if (!inFile.is_open()) {
-    std::cerr << "Failed to open fit parameters file!" << std::endl;
-    return;
-  }
-
-  std::string line;
-  while (std::getline(inFile, line)) {
-    std::istringstream iss(line);
-    std::string temp;
-    int detectorIndex;
-
-    iss >> temp >> detectorIndex >> temp;
-
-    std::vector<double> fitParams;
-    double param;
-    while (iss >> param) {
-      fitParams.push_back(param);
-    }
-
-    if (detectorIndex >= params.size()) {
-      params.resize(detectorIndex + 1);
-    }
-    params[detectorIndex] = fitParams;
-  }
-  inFile.close();
-}
-
-double Peak(double *dim, double *par){
-
-  double  x       = dim[0];
-
-  double  area    = par[0];
-  double  cent    = par[1];
-  double  sigma   = par[2];
-
-  return area/(sigma*TMath::Sqrt(2*TMath::Pi())) * TMath::Gaus(x,cent,sigma);
-
-}
-
-double FitNPeaks(double *dim, double *par){
-
-  double  x       = dim[0];
-
-  double  val     = 0;
-
-  double  sigma   = par[0];
-  double  p0      = par[1];
-  double  p1      = par[2];
-
-  double  *PeakPar    = new double[3];
-
-  for(int i=0;i<N;i++){
-    PeakPar[0]  = par[3+i*2];
-    if(i==0)
-      PeakPar[1] = par[4];
-    else
-      PeakPar[1] = par[4+i*2] + par[4];
-    PeakPar[2]  = sigma;
-    val += Peak(dim,PeakPar);
-  }
-
-  val += p0 + p1*x;
-    
-  return val;
-}
-
-
+const std::vector<double> peakPositions = {0.0, 1.982, 3.552, 3.630, 3.920, 5.255};
 
 void analysis_17O(){
   //================================= coinTime fit parameters
@@ -281,7 +193,7 @@ void analysis_17O(){
   TH1F* Ex_d4 = new TH1F("Ex_d4", "Ex, det 4, 10, 16, 22", 200, -2, 12);
   TH1F* Ex_d5 = new TH1F("Ex_d5", "Ex, det 5, 11, 17, 23", 200, -2, 12);
 
-  for (int i = 0; i < nDet; ++i) {
+  for (int i = 0; i < numDet; ++i) {
     TString histName;
     histName.Form("corrected_coinTime_det%d", i);
     correctedCoinTime.push_back(new TH1F(histName, histName, 400, -100, 200));
@@ -440,7 +352,7 @@ void analysis_17O(){
 
     Ex_nogates->Fill(ExCorr);
 
-  }
+  } // end of loop over entries
 
   //================================= fitting 17O
   if (fitting) {
@@ -718,7 +630,7 @@ void analysis_17O(){
     TCanvas *cAllDetectors = new TCanvas("cAllDetectors", "Corrected CoinTime for All Detectors", 1200, 800);
     cAllDetectors->Divide(6, 4);
 
-    for (int i = 0; i < nDet; ++i) {
+    for (int i = 0; i < numDet; ++i) {
       cAllDetectors->cd(i + 1);
       correctedCoinTime[i]->Draw();
     }
@@ -728,7 +640,7 @@ void analysis_17O(){
     TCanvas *cAllDetectorsXgate = new TCanvas("cAllDetectorsXgate", "Corrected CoinTime for All Detectors with x gate", 1200, 800);
     cAllDetectorsXgate->Divide(6, 4);
 
-    for (int i = 0; i < nDet; ++i) {
+    for (int i = 0; i < numDet; ++i) {
       cAllDetectorsXgate->cd(i + 1);
       correctedCoinTimeXgate[i]->Draw();
     }
@@ -738,7 +650,7 @@ void analysis_17O(){
     TCanvas *cAllDetectorsRDT = new TCanvas("cAllDetectorsRDT", "Corrected CoinTime for All Detectors (RDT coin)", 1200, 800);
     cAllDetectorsRDT->Divide(6, 4);
 
-    for (int i = 0; i < nDet; ++i) {
+    for (int i = 0; i < numDet; ++i) {
       cAllDetectorsRDT->cd(i + 1);
       correctedCoinTimeRDTCoin[i]->Draw();
     }
@@ -748,7 +660,7 @@ void analysis_17O(){
     TCanvas *cAllDetectorsXgateRDT = new TCanvas("cAllDetectorsXgateRDT", "Corrected CoinTime for All Detectors (RDT coin && x gate)", 1200, 800);
     cAllDetectorsXgateRDT->Divide(6, 4);
 
-    for (int i = 0; i < nDet; ++i) {
+    for (int i = 0; i < numDet; ++i) {
       cAllDetectorsXgateRDT->cd(i + 1);
       correctedCoinTimeXgateRDTCoin[i]->Draw();
     }
@@ -769,7 +681,7 @@ void analysis_17O(){
 
     TH1F *combinedHist = (TH1F*)correctedCoinTimeXgateRDTCoin[0]->Clone("combinedHist");
     combinedHist->Reset();
-    for (int i = 0; i < nDet; ++i) {
+    for (int i = 0; i < numDet; ++i) {
       combinedHist->Add(correctedCoinTimeXgateRDTCoin[i]);
     }
 
@@ -798,6 +710,5 @@ void analysis_17O(){
     cExnogates->SaveAs("17O_analysis_ExCorr/Ex_nogates.png");
 
   }
-
 
 }
