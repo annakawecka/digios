@@ -1,0 +1,124 @@
+Histogram: Ex_d0
+Background Intercept: 1.38067
+Background Slope: -0.150536
+Peak 1 Amplitude: 32.094
+Peak 1 Position: 0.150836
+Peak 1 Sigma: 0.0613512
+Peak 1 Integral: 4.93556
+
+Histogram: Ex_d1
+Background Intercept: 1.18488
+Background Slope: 0.0979629
+Peak 1 Amplitude: 27.2561
+Peak 1 Position: 0.157632
+Peak 1 Sigma: 0.0694546
+Peak 1 Integral: 4.74521
+Peak 2 Amplitude: 215.85
+Peak 2 Position: 2.09222
+Peak 2 Sigma: 0.0842401
+Peak 2 Integral: 45.5787
+Peak 3 Amplitude: 33.1175
+Peak 3 Position: 3.46751
+Peak 3 Sigma: 0.0576443
+Peak 3 Integral: 4.78524
+
+Histogram: Ex_d2
+Background Intercept: 1.75198
+Background Slope: 0.283097
+Peak 1 Amplitude: 133.296
+Peak 1 Position: 2.12467
+Peak 1 Sigma: 0.0875161
+Peak 1 Integral: 29.2412
+Peak 2 Amplitude: 117.533
+Peak 2 Position: 3.6
+Peak 2 Sigma: 0.09
+Peak 2 Integral: 26.5151
+Peak 3 Amplitude: 541.021
+Peak 3 Position: 3.70408
+Peak 3 Sigma: 0.0788398
+Peak 3 Integral: 106.918
+Peak 4 Amplitude: 245.685
+Peak 4 Position: 4.05851
+Peak 4 Sigma: 0.09
+Peak 4 Integral: 55.4257
+
+Histogram: Ex_d3
+Background Intercept: 1.19067
+Background Slope: 0.285792
+Peak 1 Amplitude: 113.528
+Peak 1 Position: 2.13938
+Peak 1 Sigma: 0.0736302
+Peak 1 Integral: 20.9531
+Peak 2 Amplitude: 354.503
+Peak 2 Position: 3.64608
+Peak 2 Sigma: 0.0545058
+Peak 2 Integral: 48.4343
+Peak 3 Amplitude: 217.748
+Peak 3 Position: 3.71699
+Peak 3 Sigma: 0.066867
+Peak 3 Integral: 36.4969
+Peak 4 Amplitude: 153.138
+Peak 4 Position: 4.03364
+Peak 4 Sigma: 0.0770241
+Peak 4 Integral: 29.5664
+Peak 5 Amplitude: 162.557
+Peak 5 Position: 5.46661
+Peak 5 Sigma: 0.09
+Peak 5 Integral: 36.6722
+
+Histogram: Ex_d4
+Background Intercept: 0.877905
+Background Slope: 0.316872
+Peak 1 Amplitude: 52.1008
+Peak 1 Position: 2.18547
+Peak 1 Sigma: 0.0807725
+Peak 1 Integral: 10.5487
+Peak 2 Amplitude: 180.828
+Peak 2 Position: 3.67739
+Peak 2 Sigma: 0.0589735
+Peak 2 Integral: 26.7308
+Peak 3 Amplitude: 83.0044
+Peak 3 Position: 3.79187
+Peak 3 Sigma: 0.0400001
+Peak 3 Integral: 8.32246
+Peak 4 Amplitude: 89.736
+Peak 4 Position: 4.05436
+Peak 4 Sigma: 0.0806594
+Peak 4 Integral: 18.1431
+Peak 5 Amplitude: 105.439
+Peak 5 Position: 5.43972
+Peak 5 Sigma: 0.0883876
+Peak 5 Integral: 23.3605
+Peak 6 Amplitude: 17.4345
+Peak 6 Position: 6.406
+Peak 6 Sigma: 0.061578
+Peak 6 Integral: 2.69106
+Peak 7 Amplitude: 43.7188
+Peak 7 Position: 7.14726
+Peak 7 Sigma: 0.0689806
+Peak 7 Integral: 7.55936
+
+Histogram: Ex_d5
+Background Intercept: -1.03752
+Background Slope: 1.00804
+Peak 1 Amplitude: 26.0594
+Peak 1 Position: 2.20733
+Peak 1 Sigma: 0.09
+Peak 1 Integral: 5.87892
+Peak 2 Amplitude: 78.5779
+Peak 2 Position: 3.68376
+Peak 2 Sigma: 0.0652213
+Peak 2 Integral: 12.8464
+Peak 3 Amplitude: 37.0703
+Peak 3 Position: 3.81279
+Peak 3 Sigma: 0.0899997
+Peak 3 Integral: 8.3629
+Peak 4 Amplitude: 57.3296
+Peak 4 Position: 4.09825
+Peak 4 Sigma: 0.0837439
+Peak 4 Integral: 12.0343
+Peak 5 Amplitude: 122.32
+Peak 5 Position: 5.45352
+Peak 5 Sigma: 0.09
+Peak 5 Integral: 27.5949
+

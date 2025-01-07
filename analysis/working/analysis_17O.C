@@ -1,7 +1,7 @@
 #include "utilities.h"
 
 TString rdtCutFile = "rdtCuts_17O.root";
-TString saveFileHists = "rings_17O.root";
+TString saveFileHists = "rings_17O_300bins.root";
 TString saveFileHistsStrictTC = "rings_17O_200bins_strict_tc.root";
 
 TObjArray * cutList;
@@ -14,6 +14,8 @@ bool rdtgate = false;
 bool xgate = false;
 bool cointimegate = false;
 bool strict_cointimegate = false;
+bool cointimegate_2turns = false;
+bool cointimegate_3turns = false;
 
 int n_coin = 0;
 int n_coin_rdt = 0;
@@ -41,6 +43,12 @@ double Et, massB;
 
 bool plothist = true;
 bool fitting = false;
+
+int side1 = 0;
+int side2 = 0;
+int side3 = 0;
+int side4 = 0;
+int countIn[24];
 
 std::ifstream file;
 
@@ -188,16 +196,19 @@ void analysis_17O(){
   TH1F* Ex_nogates = new TH1F("Ex_nogates", "Ex, no gates", 200, -2, 12);
   TH2F* EZ_nogates = new TH2F("EZ_nogates", "e vs z, no gates", 1000, -550, -200, 200, 0, 12);
   TH2F* EZ_gated = new TH2F("EZ_gated", "e vs z, gated", 1000, -550, -200, 200, 0, 12);
-
+  TH2F* EZ_gated_2turns = new TH2F("EZ_gated_2turns", "e vs z, gated, 2 turns", 1000, -550, -200, 200, 0, 12);
+  TH2F* EZ_gated_3turns = new TH2F("EZ_gated_3turns", "e vs z, gated, 3 turns", 1000, -550, -200, 200, 0, 12);
+  
   std::vector<TH1F*> Ex_d; // Array to store histograms for Ex_d0, Ex_d1, ..., Ex_d5
   std::vector<TH1F*> Ex_d_strict_tc;
-
+  std::vector<TH1F*> Ex_single; // Array to store histograms for Ex for all detectors individually 
+  
   printf("Before initialising Ex_d histograms\n");
 
   for (int i = 0; i < 6; ++i) {
     TString histName;
     histName.Form("Ex_d%d", i);
-    Ex_d.push_back(new TH1F(histName, histName, 200, -2, 12));
+    Ex_d.push_back(new TH1F(histName, histName, 300, -2, 12));
     histName.Form("Ex_d%d_strict_tc", i);
     Ex_d_strict_tc.push_back(new TH1F(histName, histName, 200, -2, 12));
   }
@@ -214,6 +225,8 @@ void analysis_17O(){
     correctedCoinTimeRDTCoin.push_back(new TH1F(histName, histName, 400, -100, 200));
     histName.Form("corrected_coinTime_det%d_x_gate_rdt_coincidence", i);
     correctedCoinTimeXgateRDTCoin.push_back(new TH1F(histName, histName, 400, -100, 200));
+    histName.Form("Ex_single_det%d", i);
+    Ex_single.push_back(new TH1F(histName, histName, 200, -2, 12));
   }
 
   for (int i = 0; i < 4; ++i) {
@@ -240,6 +253,8 @@ void analysis_17O(){
     rdtgate = false;
     xgate = false;
     cointimegate = false;
+    cointimegate_2turns = false;
+    cointimegate_3turns = false;
     strict_cointimegate = false;
 
     chain->GetEntry(i);
@@ -330,6 +345,12 @@ void analysis_17O(){
       strict_cointimegate = true;
     }
 
+    if (coinTimeCorr > 15 && coinTimeCorr < 40)
+      cointimegate_2turns = true;
+
+    if (coinTimeCorr > 40 && coinTimeCorr < 60)
+      cointimegate_3turns = true;
+
     correctedCoinTime[detID]->Fill(coinTimeCorr);
     n_coin++;
 
@@ -355,16 +376,40 @@ void analysis_17O(){
 
 	Ex_d[detID % 6]->Fill(Ex);
 
+	Ex_single[detID]->Fill(Ex);
+
 	EZ_gated->Fill(z[detID], e[detID]);
+
+	if (detID <= 5)
+	  side1++;
+	else if (detID >= 6 && detID <= 11)
+	  side2++;
+	else if (detID >= 12 && detID <= 17)
+	  side3++;
+	else if (detID >= 18 && detID <= 23)
+	  side4++;
+
+	countIn[detID]++;
       }
 
       if (strict_cointimegate)
 	Ex_d_strict_tc[detID % 6]->Fill(Ex);
+
+      if (cointimegate_2turns)
+	EZ_gated_2turns->Fill(z[detID], e[detID]);
+
+      if (cointimegate_3turns)
+	EZ_gated_3turns->Fill(z[detID], e[detID]);
     }
 
     Ex_nogates->Fill(Ex);
 
+
   } // end of loop over entries
+
+  printf("Counts in each detector side:\nside1:\t%d\tside2:\t%d\tside3:\t%d\tside4:\t%d\n", side1, side2, side3, side4);
+  printf("Scaled to number of working dets:\nside1:\t%d\tside2:\t%d\tside3:\t%d\tside4:\t%d\n", side1, side2*6/4, side3, side4);
+  printf("Individual sides:\n0:\t%d\t1:\t%d\t2:\t%d\t3:\t%d\t4:\t%d\t5:\t%d\n6:\t%d\t7:\t%d\t8:\t%d\t9:\t%d\t10:\t%d\t11:\t%d\n12:\t%d\t13:\t%d\t14:\t%d\t15:\t%d\t16:\t%d\t17:\t%d\n18:\t%d\t19:\t%d\t20:\t%d\t21:\t%d\t22:\t%d\t23:\t%d\n", countIn[0], countIn[1], countIn[2], countIn[3], countIn[4], countIn[5], countIn[6], countIn[7], countIn[8], countIn[9], countIn[10], countIn[11], countIn[12], countIn[13], countIn[14], countIn[15], countIn[16], countIn[17], countIn[18], countIn[19], countIn[20], countIn[21], countIn[22], countIn[23]);
 
   //================================= saving histograms to a root file
 
@@ -392,8 +437,8 @@ void analysis_17O(){
     cExdet->Divide(3, 2);
 
     for (int i = 0; i < 6; ++i) {
-      cExdet->cd(i + 1);  // Navigate to the correct pad
-      Ex_d[i]->Draw();  // Draw the histogram for this detector
+      cExdet->cd(i + 1);
+      Ex_d[i]->Draw();
     }
 
     cExdet->SaveAs("17O_analysis/Ex_for_rings.png");
@@ -494,10 +539,29 @@ void analysis_17O(){
     EZ_nogates->Draw();
     cEZnogates->SaveAs("17O_analysis/EZ_nogates.png");
 
+    gStyle->SetOptStat(000);
+
     TCanvas *cEZgated = new TCanvas("cEZgated", "e vs z, gated", 800, 600);
     EZ_gated->Draw();
     cEZgated->SaveAs("17O_analysis/EZ_gated.png");
 
+    TCanvas *cEZgated2turns = new TCanvas("cEZgated2turns", "e vs z, gated, 2 turns", 800, 600);
+    EZ_gated_2turns->Draw();
+    cEZgated2turns->SaveAs("17O_analysis/EZ_gated_2turns.png");
+
+    TCanvas *cEZgated3turns = new TCanvas("cEZgated3turns", "e vs z, gated, 3 turns", 800, 600);
+    EZ_gated_3turns->Draw();
+    cEZgated3turns->SaveAs("17O_analysis/EZ_gated_3turns.png");
+
+    TCanvas *cExSingleDets = new TCanvas("cExSingleDets", "Ex for each detector", 1200, 800);
+    cExSingleDets->Divide(6, 4);
+
+    for (int i = 0; i < numDet; ++i) {
+      cExSingleDets->cd(i + 1);
+      Ex_single[i]->Draw();
+    }
+
+    cExSingleDets->SaveAs("17O_analysis/Ex_each_detector.png");
   }
 
 }
