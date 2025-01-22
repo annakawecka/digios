@@ -9,6 +9,8 @@
 #include <TObjArray.h>
 #include <TSystem.h>
 
+// make graphic cuts for rdt for 17F or 17O
+
 void CutCreator(){
 	
   printf("================ Graphic Cut Creator for RDT ============== \n");
@@ -16,7 +18,8 @@ void CutCreator(){
   bool separate = true;
    
   TChain * chain = new TChain("tree");
-  chain->Add("gen_run022-052.root");
+  //chain->Add("trace_run022-052.root");   // 17F
+  chain->Add("trace_run055-066.root"); // 17O
   //chain->Add("data/gen_run49.root");
   //chain->Add("data/gen_run50.root");
    
@@ -31,7 +34,7 @@ void CutCreator(){
   if( !cCutCreator->GetShowToolBar() ) cCutCreator->ToggleToolBar();
 	
    
-  TFile * cutFile = new TFile("rdtCuts_tight.root", "recreate");
+  TFile * cutFile = new TFile("rdtCuts_17O.root", "recreate");
   cCutCreator->Update();
 	
   TCutG * cut = NULL;
@@ -78,12 +81,13 @@ void CutCreator(){
 	  printf("No cut created for %d-th plot. Skipping.\n", i);
 	}
 
-	cCutCreator->SaveAs(Form("plots/rdt_%d_%d_tight.png", i, i+1));
+	cCutCreator->SaveAs(Form("plots/rdt_%d_%d_17O.png", i, i+1));
       }
 
     }
   }
-  
+
+  /*
   TCanvas *cCombined = new TCanvas("cCombined", "Combined (dE vs E) Plot", 100, 100, 800, 800);
   if (!cCombined->GetShowToolBar()) cCombined->ToggleToolBar();
 
@@ -118,6 +122,7 @@ void CutCreator(){
   }
 
   cCutCreator->SaveAs(Form("plots/rdt_combined_tight.png"));
+  */
 	
   cutList->Write("cutList", TObject::kSingleKey);
 	

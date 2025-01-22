@@ -15,6 +15,9 @@
 #include "../Armory/AnalysisLibrary.h"
 #include <fstream>
 
+// code for correcting coincidence time vs x
+// fits coinTime vs x and plots the corrected spectrum
+
 void saveFitParameters(const TString &fileName, int detIndex, TF1 *fitFunc) {
   std::ofstream outFile;
   outFile.open(fileName, std::ios::app);
