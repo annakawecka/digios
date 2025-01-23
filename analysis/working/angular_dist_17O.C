@@ -76,23 +76,36 @@ void angular_dist_17O() {
   }
 
   std::vector<std::pair<std::vector<std::vector<double>>, std::vector<int>>> fitMappings = {
-    {ex1982, {0, 1, 2}},
-    {ex3552, {3, 4}},
-    {ex3630, {5}},
-    {ex3920, {6, 7, 8}},
-    {ex5255, {9}}
+    {ex1982, {0, 1, 2, 3, 4}},
+    {ex3552, {5, 6, 7, 8, 9}},
+    {ex3630, {10, 11, 12}},
+    {ex3920, {13, 14, 15, 16, 17, 18}},
+    {ex5255, {19, 20, 21, 22}}
   };
+
+  std::vector<int> color = { 1, 629, 596, 418, 801, 905};
+  int ncolor = 0;
 
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
     const auto& dataSet = fitMappings[mappingIndex].first;
     const auto& fitIndices = fitMappings[mappingIndex].second;
 
+    ncolor = 0;
+
     std::vector<double> theta_means;
     std::vector<double> int_corr_sins;
 
     for (const auto& det : dataSet) {
+      Tmin = det[0];
+      Tmax = det[1];
+      Dt = det[2];
+      ThetaMean = det[3];
+      sin_x_dx = det[4];
+      integral_corr = det[5];
+      int_corr_sin = det[6];
+      
       theta_means.push_back(det[3]);
-      int_corr_sins.push_back(det[5] / det[4]);
+      int_corr_sins.push_back(det[5] * det[4] / 10.0);
     }
 
     TGraph* experimentGraph = new TGraph(theta_means.size(), &theta_means[0], &int_corr_sins[0]);
@@ -103,10 +116,10 @@ void angular_dist_17O() {
     experimentGraph->SetLineWidth(0);
 
     experimentGraph->GetXaxis()->SetRangeUser(0, 60);
-    experimentGraph->GetYaxis()->SetRangeUser(0.01, 100);
+    experimentGraph->GetYaxis()->SetRangeUser(0.01, 300);
 
     TCanvas* canvas = new TCanvas(Form("fit_canvas_%lu", mappingIndex + 1), 
-                                  Form("Ex = %.3f MeV", Ex_values[mappingIndex]), 800, 600);
+                                  Form("Ex = %.3f MeV", Ex_values[mappingIndex]), 1600, 1200);
 
     experimentGraph->Draw("AP SAME");
 
@@ -115,11 +128,12 @@ void angular_dist_17O() {
     latex.SetTextAlign(22);
     latex.DrawLatexNDC(0.5, 0.92, Form("Plot Ex = %.3f MeV", Ex_values[mappingIndex]));
 
-    TLegend* legend = new TLegend(0.25, 0.15, 0.98, 0.35);
+    TLegend* legend = new TLegend(0.12, 0.15, 0.89, 0.35);
     legend->SetTextSize(0.03);
+    legend->SetMargin(0.1);
     legend->SetBorderSize(0);
     legend->SetFillColor(0); 
-    legend->AddEntry(experimentGraph, "Data Points", "p");
+    //legend->AddEntry(experimentGraph, "Data Points", "p");
 
     double bestChi2 = 1e9;
     TGraph* bestFitGraph = nullptr;
@@ -127,34 +141,38 @@ void angular_dist_17O() {
     for (int fitIndex : fitIndices) {
       std::cout << "dataSet: " << mappingIndex << " fitIndex: " << fitIndex << std::endl;
       TGraph* fitGraph = graphsDWBA[fitIndex];
-      fitGraph->SetLineColor(fitIndex + 2); // Assign different colors
+      fitGraph->SetLineColor(color[ncolor]);
+      fitGraph->SetLineWidth(2);
       fitGraph->Draw("L");
-      legend->AddEntry(fitGraph, fitGraph->GetName(), "l");
+      // legend->AddEntry(fitGraph, fitGraph->GetName(), "l");
 
-      /*TF1* fitFunction = new TF1("fitFunction", "[0] + [1]*x", 0, 60);
-      fitGraph->Fit(fitFunction, "Q");
+      ncolor++;
 
-      double chi2 = fitFunction->GetChisquare();
-      double ndf = fitFunction->GetNDF();
-      double reducedChi2 = chi2 / ndf;
+      double chi2 = 0.0;
+      int nPoints = experimentGraph->GetN();
+      for (int i = 0; i < nPoints; ++i) {
+	double xData, yData;
+	experimentGraph->GetPoint(i, xData, yData);
 
-      legend->AddEntry(fitGraph, 
-                       Form("Graph %d, #chi^{2}/ndf = %.3f", fitIndex, reducedChi2), "l");
+	double yFit = fitGraph->Eval(xData);
+
+	double sigmaData = 0.1 * yData; 
+	if (sigmaData == 0) sigmaData = 1.0;
+
+	chi2 += pow((yData - yFit) / sigmaData, 2);
+      }
+
+      std::cout << "Fit Index: " << fitIndex << ", Chi2: " << chi2 << ", NDF: " << nPoints << std::endl;
+
+      legend->AddEntry(fitGraph, Form("%s, #chi^{2}/ndf = %.3f", fitGraph->GetName(), chi2 / nPoints), "l");
 
       if (chi2 < bestChi2) {
-        bestChi2 = chi2;
-        bestFitGraph = fitGraph;
+	bestChi2 = chi2;
+	bestFitGraph = fitGraph;
       }
-      */
+
     }
 
-    //experimentGraph->Draw("AP SAME");
-
-    /*if (bestFitGraph) {
-      bestFitGraph->SetLineColor(kRed);
-      bestFitGraph->Draw("L SAME");
-      legend->AddEntry(bestFitGraph, "Best Fit", "l");
-      }*/
     canvas->SetLogy();
 
     legend->Draw();
@@ -181,36 +199,6 @@ void angular_dist_17O() {
       int_corr_sins.push_back(integral_corr / sin_x_dx);
 
     }
-
-    TGraph *graph = new TGraph(theta_means.size(), &theta_means[0], &int_corr_sins[0]);
-    graph->SetTitle("");
-    graph->SetMarkerStyle(20);
-    graph->SetMarkerSize(1);
-    graph->SetLineWidth(0);
-    graphs.push_back(graph);
-
-    TCanvas *canvas = new TCanvas(Form("canvas_%lu", ex + 1), Form("Experiment %lu", ex + 1), 800, 600);
-    canvas->SetTopMargin(0.1);
-    canvas->SetLeftMargin(0.12);
-    canvas->SetRightMargin(0.12);
-    canvas->SetBottomMargin(0.12);
-
-    //graph->GetXaxis()->SetLimits(0, 50);
-    //graph->GetYaxis()->SetLimits(0, 60);
-    graph->GetXaxis()->SetRangeUser(0, 60);
-    graph->GetYaxis()->SetRangeUser(0, 100);
-    
-    graph->Draw("AP");
-
-    TLatex latex;
-    latex.SetTextSize(0.04);
-    latex.SetTextAlign(22);
-    latex.DrawLatexNDC(0.5, 0.92, Form("Ex = %.3f MeV", Ex_values[ex]));
-
-    canvas->SetLogy();
-    
-    canvas->SaveAs(Form("ang_dist_17O/Ex_%lu.png", ex + 1));
-  }
 
   */
   
