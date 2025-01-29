@@ -5,6 +5,8 @@
 #include <TMultiGraph.h>
 #include <vector>
 #include <string>
+#include <cmath>
+#include <algorithm>
 
 std::vector<TGraph*> graphsDWBA;
 
@@ -15,6 +17,25 @@ double combinedDWBA(double *x, double *par) {
     result += par[i] * dwba_val;
   }
   return result;
+}
+
+std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indices) {
+  std::vector<std::vector<int>> combinations;
+  size_t n = indices.size();
+  for (size_t k = 1; k <= n; ++k) {
+    std::vector<bool> select(n);
+    std::fill(select.begin(), select.begin() + k, true);
+    do {
+      std::vector<int> subset;
+      for (size_t i = 0; i < n; ++i) {
+	if (select[i]) {
+	  subset.push_back(indices[i]);
+	}
+      }
+      combinations.push_back(subset);
+    } while (std::prev_permutation(select.begin(), select.end()));
+  }
+  return combinations;
 }
 
 void angular_dist_17O() {
@@ -101,15 +122,26 @@ void angular_dist_17O() {
     {ex3530, {5, 6, 7, 8, 9, 10, 11, 12}},
   };
 
+  std::vector<std::vector<std::vector<int>>> fitPairs =  {
+    {{0, 1, 2, 3, 4}, {0, 2}, {0, 3}, {1, 4}},
+    {{5}, {6}, {5, 6}, {8, 9}},
+    {{10}, {11}, {12}, {10, 11}},
+    {{13}, {17, 18}, {15, 16}, {14, 15}},
+    {{19}, {29}, {20, 21}, {19, 22}},
+    {{5}, {10}, {5, 6}, {8, 9}},
+  };
+
   std::vector<int> color = { 1, 629, 596, 418, 801, 905, 8, 9};
   int ncolor = 0;
 
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
     const auto& dataSet = fitMappings[mappingIndex].first;
     const auto& fitIndices = fitMappings[mappingIndex].second;
-    std::vector<int> bestPermutation;
+    auto allCombinations = generateCombinations(fitIndices);
 
-    std::sort(fitIndices.begin(), fitIndices.end());
+    double bestChi2 = 1e9;
+    std::vector<int> bestCombination;
+    TF1* bestFitFunction = nullptr;
 
     ncolor = 0;
 
@@ -140,9 +172,9 @@ void angular_dist_17O() {
     experimentGraph->GetYaxis()->SetRangeUser(0.01, 300);
 
     TCanvas* canvas = new TCanvas(Form("fit_canvas_%lu", mappingIndex + 1), 
-                                  Form("Ex = %.3f MeV", Ex_values[mappingIndex]), 1600, 1200);
+				  Form("Ex = %.3f MeV", Ex_values[mappingIndex]), 1600, 1200);
 
-    experimentGraph->Draw("AP SAME");
+    experimentGraph->Draw("AP");
 
     TLatex latex;
     latex.SetTextSize(0.04);
@@ -156,10 +188,8 @@ void angular_dist_17O() {
     legend->SetFillColor(0); 
     //legend->AddEntry(experimentGraph, "Data Points", "p");
 
-    double bestChi2 = 1e9;
-    TGraph* bestFitGraph = nullptr;
 
-    TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, fitIndices.size());
+    /*TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, fitIndices.size());
     for (size_t i = 0; i < fitIndices.size(); ++i) {
       fitFunction->SetParameter(i, 1.0);
     }
@@ -170,7 +200,7 @@ void angular_dist_17O() {
     for (size_t i = 0; i < fitIndices.size(); ++i) {
       bestScales.push_back(fitFunction->GetParameter(i));
       std::cout << "DWBA " << fitIndices[i] << " Scale Factor: " << bestScales[i] << std::endl;
-    }
+      }*/
 
     for (int fitIndex : fitIndices) {
       std::cout << "dataSet: " << mappingIndex << " fitIndex: " << fitIndex << std::endl;
@@ -182,8 +212,8 @@ void angular_dist_17O() {
       ncolor++;
 
       /*double chi2 = 0.0;
-      int nPoints = experimentGraph->GetN();
-      for (int i = 0; i < nPoints; ++i) {
+	int nPoints = experimentGraph->GetN();
+	for (int i = 0; i < nPoints; ++i) {
 	double xData, yData;
 	experimentGraph->GetPoint(i, xData, yData);
 
@@ -202,6 +232,54 @@ void angular_dist_17O() {
       legend->AddEntry(fitGraph, Form("%s", fitGraph->GetName()), "l");
 
     }
+
+    for (const auto& subset : fitPairs[mappingIndex]) {
+      TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
+      for (size_t i = 0; i < subset.size(); ++i) {
+	fitFunction->SetParameter(i, 1.0);
+	fitFunction->SetParLimits(i, 0.0, 1000);
+      }
+
+      experimentGraph->Fit(fitFunction, "R");
+
+      double chi2 = fitFunction->GetChisquare();
+      int ndf = fitFunction->GetNDF();
+      double chi2ndf = (ndf > 0) ? (chi2 / ndf) : chi2;
+
+      if (chi2ndf < bestChi2) {
+	bestChi2 = chi2ndf;
+	bestCombination = subset;
+	bestFitFunction = fitFunction;
+      }
+    }
+
+    bestFitFunction->SetLineColor(kRed);
+    bestFitFunction->SetLineWidth(4);
+    bestFitFunction->Draw("SAME");
+
+    /*for (const auto& subset : allCombinations) {
+      TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
+      for (size_t i = 0; i < subset.size(); ++i) {
+	fitFunction->SetParameter(i, 1.0);
+      }
+
+      experimentGraph->Fit(fitFunction, "R");
+
+      double chi2 = fitFunction->GetChisquare();
+      int ndf = fitFunction->GetNDF();
+      double chi2ndf = (ndf > 0) ? (chi2 / ndf) : chi2;
+
+      if (chi2ndf < bestChi2) {
+	bestChi2 = chi2ndf;
+	bestCombination = subset;
+	bestFitFunction = fitFunction;
+      }
+    }
+
+    bestFitFunction->SetLineColor(kRed);
+    bestFitFunction->SetLineWidth(4);
+    bestFitFunction->Draw("SAME");
+    */
 
     canvas->SetLogy();
 
