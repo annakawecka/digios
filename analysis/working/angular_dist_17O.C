@@ -6,6 +6,17 @@
 #include <vector>
 #include <string>
 
+std::vector<TGraph*> graphsDWBA;
+
+double combinedDWBA(double *x, double *par) {
+  double result = 0;
+  for (size_t i = 0; i < graphsDWBA.size(); ++i) {
+    double dwba_val = graphsDWBA[i]->Eval(x[0]);
+    result += par[i] * dwba_val;
+  }
+  return result;
+}
+
 void angular_dist_17O() {
 
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, int_corr_sin;
@@ -45,11 +56,17 @@ void angular_dist_17O() {
     {27.99,	32.09,	4.1,	30.04,	2.052478357,	36.7932,	75.51724669}
   };
 
-  std::vector<std::vector<std::vector<double>>> data = {ex1982, ex3552, ex3630, ex3920, ex5255};
-  std::vector<double> Ex_values = {1.982, 3.552, 3.630, 3.920, 5.255};
+  std::vector<std::vector<double>> ex3530 = {
+    {11.38,	19.93,	8.55,	15.65,	2.30645002,	132.106,	307.0023357},
+    {21.25,	26.25,	4.99,	23.82,	2.01528462,	83.5226,	168.3218109},
+    {27.35,	31.37,	4.01,	29.42,	1.972,		46.512,		91.721664},
+    {32.24,	35.74,	3.5,	34.04,	1.9552,		26.4529333,	51.72077525}
+  };
+
+  std::vector<std::vector<std::vector<double>>> data = {ex1982, ex3552, ex3630, ex3920, ex3530};
+  std::vector<double> Ex_values = {1.982, 3.552, 3.630, 3.920, 5.255, 3.530};
 
   std::vector<TGraph*> graphs;
-  std::vector<TGraph*> graphsDWBA;
 
   TFile *file = TFile::Open("DWBA_17O_more_states.root");
   
@@ -80,15 +97,19 @@ void angular_dist_17O() {
     {ex3552, {5, 6, 7, 8, 9}},
     {ex3630, {10, 11, 12}},
     {ex3920, {13, 14, 15, 16, 17, 18}},
-    {ex5255, {19, 20, 21, 22}}
+    {ex5255, {19, 20, 21, 22}},
+    {ex3530, {5, 6, 7, 8, 9, 10, 11, 12}},
   };
 
-  std::vector<int> color = { 1, 629, 596, 418, 801, 905};
+  std::vector<int> color = { 1, 629, 596, 418, 801, 905, 8, 9};
   int ncolor = 0;
 
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
     const auto& dataSet = fitMappings[mappingIndex].first;
     const auto& fitIndices = fitMappings[mappingIndex].second;
+    std::vector<int> bestPermutation;
+
+    std::sort(fitIndices.begin(), fitIndices.end());
 
     ncolor = 0;
 
@@ -105,7 +126,7 @@ void angular_dist_17O() {
       int_corr_sin = det[6];
       
       theta_means.push_back(det[3]);
-      int_corr_sins.push_back(det[5] * det[4] / 10.0);
+      int_corr_sins.push_back(det[5] / det[4] / 10.0);
     }
 
     TGraph* experimentGraph = new TGraph(theta_means.size(), &theta_means[0], &int_corr_sins[0]);
@@ -138,17 +159,29 @@ void angular_dist_17O() {
     double bestChi2 = 1e9;
     TGraph* bestFitGraph = nullptr;
 
+    TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, fitIndices.size());
+    for (size_t i = 0; i < fitIndices.size(); ++i) {
+      fitFunction->SetParameter(i, 1.0);
+    }
+
+    experimentGraph->Fit(fitFunction, "R");
+
+    std::vector<double> bestScales;
+    for (size_t i = 0; i < fitIndices.size(); ++i) {
+      bestScales.push_back(fitFunction->GetParameter(i));
+      std::cout << "DWBA " << fitIndices[i] << " Scale Factor: " << bestScales[i] << std::endl;
+    }
+
     for (int fitIndex : fitIndices) {
       std::cout << "dataSet: " << mappingIndex << " fitIndex: " << fitIndex << std::endl;
       TGraph* fitGraph = graphsDWBA[fitIndex];
       fitGraph->SetLineColor(color[ncolor]);
       fitGraph->SetLineWidth(2);
       fitGraph->Draw("L");
-      // legend->AddEntry(fitGraph, fitGraph->GetName(), "l");
 
       ncolor++;
 
-      double chi2 = 0.0;
+      /*double chi2 = 0.0;
       int nPoints = experimentGraph->GetN();
       for (int i = 0; i < nPoints; ++i) {
 	double xData, yData;
@@ -160,16 +193,13 @@ void angular_dist_17O() {
 	if (sigmaData == 0) sigmaData = 1.0;
 
 	chi2 += pow((yData - yFit) / sigmaData, 2);
-      }
+	}*/
 
-      std::cout << "Fit Index: " << fitIndex << ", Chi2: " << chi2 << ", NDF: " << nPoints << std::endl;
+      //std::cout << "Fit Index: " << fitIndex << ", Chi2: " << chi2 << ", NDF: " << nPoints << std::endl;
 
-      legend->AddEntry(fitGraph, Form("%s, #chi^{2}/ndf = %.3f", fitGraph->GetName(), chi2 / nPoints), "l");
-
-      if (chi2 < bestChi2) {
-	bestChi2 = chi2;
-	bestFitGraph = fitGraph;
-      }
+      //legend->AddEntry(fitGraph, Form("%s, #chi^{2}/ndf = %.3f", fitGraph->GetName(), chi2 / nPoints), "l");
+      
+      legend->AddEntry(fitGraph, Form("%s", fitGraph->GetName()), "l");
 
     }
 
@@ -178,28 +208,5 @@ void angular_dist_17O() {
     legend->Draw();
     canvas->SaveAs(Form("ang_dist_17O/fit_Ex_%lu.png", mappingIndex + 1));
   }
-
-  /*
-    for (size_t ex = 0; ex < data.size(); ++ex) {
-    std::vector<double> theta_means;
-    std::vector<double> int_corr_sins;
-
-    for (size_t det = 0; det < data[ex].size(); ++det) {
-
-      Tmin = data[ex][det][0];
-      Tmax = data[ex][det][1];
-      Dt = data[ex][det][2];
-      ThetaMean = data[ex][det][3];
-      sin_x_dx = data[ex][det][4];
-      integral_corr = data[ex][det][5];
-      int_corr_sin = data[ex][det][6];
-
-      theta_means.push_back(ThetaMean);
-      // int_corr_sins.push_back(int_corr_sin);
-      int_corr_sins.push_back(integral_corr / sin_x_dx);
-
-    }
-
-  */
   
 }
