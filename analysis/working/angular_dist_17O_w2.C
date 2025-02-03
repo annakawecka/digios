@@ -9,13 +9,20 @@
 #include <algorithm>
 
 std::vector<TGraph*> graphsDWBA;
+int nr_of_functions = 0;
+int functions_ids[10] = {0,0,0,0,0,0,0,0,0,0};
+
 
 double combinedDWBA(double *x, double *par) {
   double result = 0;
-  for (size_t i = 0; i < graphsDWBA.size(); ++i) {
-    double dwba_val = graphsDWBA[i]->Eval(x[0]);
+    //cout<<"Number of functions: "<<nr_of_functions<<endl;
+  for (size_t i = 0; i < nr_of_functions; ++i) {
+    double dwba_val = graphsDWBA[functions_ids[i]]->Eval(x[0]);
+    //cout<<"dwba_val = "<<dwba_val<<endl;
     result += par[i] * dwba_val;
+  //cout<<"Function: "<<functions_ids[i]<<endl;
   }
+  //cout<<"result = "<<result<<endl;
   return result;
 }
 
@@ -38,7 +45,7 @@ std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indic
   return combinations;
 }
 
-void angular_dist_17O() {
+void angular_dist_17O_w2() {
 
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, int_corr_sin;
 
@@ -123,11 +130,11 @@ void angular_dist_17O() {
   };
 
   std::vector<std::vector<std::vector<int>>> fitPairs =  {
-    {{0, 1, 2, 3, 4}, {0, 2}, {0, 3}, {1, 4}},
+    {{0, 2, 3}, {0, 2}, {0, 3}, {1, 4}},
     {{5}, {6}, {5, 6}, {8, 9}},
     {{10}, {11}, {12}, {10, 11}},
     {{13}, {17, 18}, {15, 16}, {14, 15}},
-    {{19}, {29}, {20, 21}, {19, 22}},
+    {{19}, {20, 21}, {19, 22}},
     {{5}, {10}, {5, 6}, {8, 9}},
   };
 
@@ -158,7 +165,7 @@ void angular_dist_17O() {
       int_corr_sin = det[6];
       
       theta_means.push_back(det[3]);
-      int_corr_sins.push_back(det[5] / det[4] / 10.0);
+      int_corr_sins.push_back(det[5] * det[4] / 10.0);
     }
 
     TGraph* experimentGraph = new TGraph(theta_means.size(), &theta_means[0], &int_corr_sins[0]);
@@ -169,7 +176,7 @@ void angular_dist_17O() {
     experimentGraph->SetLineWidth(0);
 
     experimentGraph->GetXaxis()->SetRangeUser(0, 60);
-    experimentGraph->GetYaxis()->SetRangeUser(0.01, 300);
+    experimentGraph->GetYaxis()->SetRangeUser(.01, 50);
 
     TCanvas* canvas = new TCanvas(Form("fit_canvas_%lu", mappingIndex + 1), 
 				  Form("Ex = %.3f MeV", Ex_values[mappingIndex]), 1600, 1200);
@@ -229,22 +236,41 @@ void angular_dist_17O() {
 
       //legend->AddEntry(fitGraph, Form("%s, #chi^{2}/ndf = %.3f", fitGraph->GetName(), chi2 / nPoints), "l");
       
-      legend->AddEntry(fitGraph, Form("%s", fitGraph->GetName()), "l");
+      legend->AddEntry(fitGraph, Form("Func %d: %s", fitIndex, fitGraph->GetName()), "l");
 
     }
-
+    bestChi2 = 1000;
     for (const auto& subset : fitPairs[mappingIndex]) {
       TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
       for (size_t i = 0; i < subset.size(); ++i) {
-	fitFunction->SetParameter(i, 1.0);
-	fitFunction->SetParLimits(i, 0.0, 1000);
+	fitFunction->SetParameter(i, 0.0);
+    fitFunction->SetParLimits(i, 0.0, 5);
       }
 
-      experimentGraph->Fit(fitFunction, "R");
+      nr_of_functions = subset.size();
+      for(int i=0; i<nr_of_functions; i++){
+        functions_ids[i] = subset[i];
+      }
+
+      experimentGraph->Fit(fitFunction, "RL");
 
       double chi2 = fitFunction->GetChisquare();
       int ndf = fitFunction->GetNDF();
-      double chi2ndf = (ndf > 0) ? (chi2 / ndf) : chi2;
+
+      double x, y;
+      double chi2ndf = 0;
+      for(int i=0; i< experimentGraph->GetN(); i++){
+        experimentGraph->GetPoint(i, x, y);
+        cout<<"x: "<<x<<", y: "<<y<<", func: "<<fitFunction->Eval(x)<<", diff: "<<y - fitFunction->Eval(x)<<endl;
+        chi2ndf += (y - fitFunction->Eval(x))* (y - fitFunction->Eval(x));
+      }
+      //double chi2ndf = (ndf > 0) ? (chi2 / ndf) : chi2;
+      //double chi2ndf = chi2 ;
+      cout<<"Chi2 from calculation: "<<chi2ndf<<", chi2 from fit: "<<chi2<<endl;
+    //fitFunction->SetLineColor(kBlue);
+    //fitFunction->SetLineWidth(4);
+    //fitFunction->Draw("SAME");
+
 
       if (chi2ndf < bestChi2) {
 	bestChi2 = chi2ndf;
@@ -260,10 +286,18 @@ void angular_dist_17O() {
       std::cout << std::endl << "chi2ndf: " << chi2ndf << std::endl;
     }
 
+    nr_of_functions = bestCombination.size();
+    for(int i=0; i<nr_of_functions; i++){
+      functions_ids[i] = bestCombination[i];
+    }
+
+
     bestFitFunction->SetLineColor(kRed);
     bestFitFunction->SetLineWidth(4);
     bestFitFunction->Draw("SAME");
-
+    cout<<"Best combination: "<<endl;
+    for(const auto& element : bestCombination)
+      cout<<element<<endl;
     /*for (const auto& subset : allCombinations) {
       TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
       for (size_t i = 0; i < subset.size(); ++i) {
@@ -291,7 +325,7 @@ void angular_dist_17O() {
     canvas->SetLogy();
 
     legend->Draw();
-    canvas->SaveAs(Form("ang_dist_17O/fit_Ex_%lu.png", mappingIndex + 1));
+    canvas->SaveAs(Form("ang_dist_17O/fit_Ex_%lu_w2.png", mappingIndex + 1));
   }
   
 }
