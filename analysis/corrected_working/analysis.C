@@ -1,6 +1,6 @@
 #include "utilities.h"
 
-bool oxygen = true;
+bool oxygen = false;
 
 std::string isotope = oxygen ? "17O" : "17F";
 std::string folderName = "plots_" + isotope + "/";
@@ -47,7 +47,7 @@ double alpha ;
 double Et, massB;
 
 bool plothist = true;
-bool fitting = false;
+bool fitting = true;
 
 int side1 = 0;
 int side2 = 0;
@@ -217,7 +217,7 @@ void analysis(){
   for (int i = 0; i < 6; ++i) {
     TString histName;
     histName.Form("Ex_d%d", i);
-    Ex_d.push_back(new TH1F(histName, histName, 300, -2, 12));
+    Ex_d.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_strict_tc", i);
     Ex_d_strict_tc.push_back(new TH1F(histName, histName, 200, -2, 12));
   }
@@ -342,7 +342,7 @@ void analysis(){
     if (xgate && rdtgate) {
       correctedCoinTimeXgateRDTCoin[detID]->Fill(coinTimeCorr);
 
-      if (cointimegate) {
+      if (cointimegate && !(detID == 0)) {
 	x_rdt_coinTime_gatedEx->Fill(Ex);
 
 	Ex_d[detID % 6]->Fill(Ex);
@@ -363,13 +363,13 @@ void analysis(){
 	countIn[detID]++;
       }
 
-      if (strict_cointimegate)
+      if (strict_cointimegate && !(detID == 0))
 	Ex_d_strict_tc[detID % 6]->Fill(Ex);
 
-      if (cointimegate_2turns)
+      if (cointimegate_2turns && !(detID == 0))
 	EZ_gated_2turns->Fill(z[detID], e[detID]);
 
-      if (cointimegate_3turns)
+      if (cointimegate_3turns && !(detID == 0))
 	EZ_gated_3turns->Fill(z[detID], e[detID]);
     }
 
@@ -414,9 +414,9 @@ void analysis(){
 
     cExdet->SaveAs((folderName + "/Ex_for_rings.png").c_str());
 
-    for (int detectorId = 0; detectorId <= 5; detectorId++) {
-      fitSpectra(Ex_d[detectorId], detectorId);
-    }
+    //for (int detectorId = 0; detectorId <= 5; detectorId++) {
+    //  fitSpectra(Ex_d[detectorId], detectorId);
+    //} // the 'real' fitting part is done in a separate root script
     
   }
 
