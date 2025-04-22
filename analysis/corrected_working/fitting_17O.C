@@ -25,7 +25,7 @@ void performFitAndPlot(const std::string &histName, TH1 *hist, const std::vector
     fitFunc->SetParameter(3 * j + 4, sigma);
 
     fitFunc->SetParLimits(3 * j + 3, peaks[j] - 0.1, peaks[j] + 0.1);
-    fitFunc->SetParLimits(3 * j + 4, 0.05, sigma + 0.01);
+    fitFunc->SetParLimits(3 * j + 4, 0.05, sigma + 0.02);
 
     fitFunc->SetParName(3 * j + 2, ("Peak" + std::to_string(j + 1) + "_Amplitude").c_str());
     fitFunc->SetParName(3 * j + 3, ("Peak" + std::to_string(j + 1) + "_Position").c_str());
