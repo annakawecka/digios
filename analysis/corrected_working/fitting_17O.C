@@ -69,19 +69,26 @@ void performFitAndPlot(const std::string &histName, TH1 *hist, const std::vector
 
   for (int j = 0; j < nPeaks; ++j) {
     double amp = fitFunc->GetParameter(3 * j + 2);
+    double amp_err = fitFunc->GetParError(3 * j + 2);
     double pos = fitFunc->GetParameter(3 * j + 3);
+    double pos_err = fitFunc->GetParError(3 * j + 3);
     double sig = fitFunc->GetParameter(3 * j + 4);
+    double sig_err = fitFunc->GetParError(3 * j + 4);
     double integral = amp * TMath::Sqrt(2 * TMath::Pi()) * sig;
+    double integral_err = sqrt(
+				 pow(sig * sqrt(2 * TMath::Pi()) * amp_err, 2) +
+				 pow(amp * sqrt(2 * TMath::Pi()) * sig_err, 2)
+				 );
 
     stats->AddText(Form("Peak %d Amplitude: %.3f", j + 1, amp));
     stats->AddText(Form("Peak %d Position: %.3f", j + 1, pos));
     stats->AddText(Form("Peak %d Sigma: %.3f", j + 1, sig));
     stats->AddText(Form("Peak %d Integral: %.3f", j + 1, integral));
 
-    outFile << "Peak " << j + 1 << " Amplitude: " << amp << "\n";
-    outFile << "Peak " << j + 1 << " Position: " << pos << "\n";
-    outFile << "Peak " << j + 1 << " Sigma: " << sig << "\n";
-    outFile << "Peak " << j + 1 << " Integral: " << integral << "\n";
+    outFile << "Peak " << j + 1 << " Amplitude: " << amp << "  (" << amp_err << ")" << "\n";
+    outFile << "Peak " << j + 1 << " Position: " << pos << "  (" << pos_err << ")"<< "\n";
+    outFile << "Peak " << j + 1 << " Sigma: " << sig << "  (" << sig_err << ")"<< "\n";
+    outFile << "Peak " << j + 1 << " Integral: " << integral << "  (" << integral_err << ")"<< "\n";
   }
 
   outFile << "\n";
