@@ -69,6 +69,9 @@ void ExtractPeakInfo_17F() {
     }
   }
 
+  std::ostream& out = std::cout;
+  std::vector<std::ostream*> outputs = { &std::cout, &outfile };
+
   for (auto* stream : outputs) {
     * stream << std::fixed << std::setprecision(5);
     * stream << std::setw(15) << "Histogram"
