@@ -1,3 +1,10 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <vector>
+#include <tuple>
+#include <cmath>
+
 void ExtractPeakInfo_17F() {
   std::vector<double> true_peaks = {
     0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081,
@@ -9,6 +16,12 @@ void ExtractPeakInfo_17F() {
   std::ifstream infile("plots_17F/fitting/fit_parameters_17F.txt");  // replace with your actual file path
   if (!infile.is_open()) {
     std::cerr << "Failed to open file\n";
+    return;
+  }
+
+  std::ofstream outfile("plots_17F/fitting/peak_summary.txt");
+  if (!outfile.is_open()) {
+    std::cerr << "Error: Could not create output file\n";
     return;
   }
 
@@ -56,26 +69,29 @@ void ExtractPeakInfo_17F() {
     }
   }
 
-  std::cout << std::fixed << std::setprecision(5);
-  std::cout << std::setw(15) << "Histogram"
-	    << std::setw(8) << "Peak#"
-	    << std::setw(18) << "MatchedTruePeak"
-	    << std::setw(12) << "Position"
-	    << std::setw(12) << "PosErr"
-	    << std::setw(12) << "Diff"
-	    << std::setw(14) << "Integral"
-	    << std::setw(12) << "IntErr" << "\n";
+  for (auto* stream : outputs) {
+    * stream << std::fixed << std::setprecision(5);
+    * stream << std::setw(15) << "Histogram"
+	     << std::setw(8) << "Peak#"
+	     << std::setw(18) << "MatchedTruePeak"
+	     << std::setw(12) << "Position"
+	     << std::setw(12) << "PosErr"
+	     << std::setw(12) << "Diff"
+	     << std::setw(14) << "Integral"
+	     << std::setw(12) << "IntErr" << "\n";
 
-  std::cout << std::string(91, '-') << "\n";
+    * stream << std::string(91, '-') << "\n";
 
-  for (const auto& peak : peaks) {
-    std::cout << std::setw(15) << std::get<0>(peak)
-	      << std::setw(8)  << std::get<1>(peak)
-	      << std::setw(18) << true_peaks[std::get<6>(peak)]
-	      << std::setw(12) << std::get<2>(peak)
-	      << std::setw(12) << std::get<3>(peak)
-	      << std::setw(12) << std::get<2>(peak) - true_peaks[std::get<6>(peak)]
-	      << std::setw(14) << std::get<4>(peak)
-	      << std::setw(12) << std::get<5>(peak) << "\n";
+    for (const auto& peak : peaks) {
+      * stream << std::setw(15) << std::get<0>(peak)
+	       << std::setw(8)  << std::get<1>(peak)
+	       << std::setw(18) << true_peaks[std::get<6>(peak)]
+	       << std::setw(12) << std::get<2>(peak)
+	       << std::setw(12) << std::get<3>(peak)
+	       << std::setw(12) << std::get<2>(peak) - true_peaks[std::get<6>(peak)]
+	       << std::setw(14) << std::get<4>(peak)
+	       << std::setw(12) << std::get<5>(peak) << "\n";
+    }
+    *stream << "\n";
   }
 }
