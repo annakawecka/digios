@@ -329,8 +329,8 @@ void angular_dist_17O() {
       //double chi2ndf = chi2 ;
       cout<<"Chi2 from calculation: "<<chi2ndf<<", chi2 from fit: "<<chi2<<endl;
 
-      if (chi2ndf < bestChi2) {
-	bestChi2 = chi2ndf;
+      if (chi2 < bestChi2) {
+	bestChi2 = chi2;
 	bestCombination = subset;
 	bestFitFunction = fitFunction;
       }
