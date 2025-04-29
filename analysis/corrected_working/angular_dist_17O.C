@@ -13,7 +13,7 @@ std::vector<TGraph*> graphsDWBA;
 int nr_of_functions = 0;
 int functions_ids[10] = {0,0,0,0,0,0,0,0,0,0};
 
-bool checking_gs = true;
+bool checking_gs = false;
 
 double combinedDWBA(double *x, double *par) {
   double result = 0;
@@ -100,8 +100,10 @@ void angular_dist_17O() {
   std::vector<double> Ex_values;
 
   if (checking_gs) {
-    data = {ex5255, ex5255, ex5255, ex5255, ex5255, ex5255, ex5255};
-    Ex_values = {5.255, 5.255, 5.255, 5.255, 5.255, 5.255, 5.255};
+    //data = {ex5255, ex5255, ex5255, ex5255, ex5255, ex5255, ex5255};
+    //Ex_values = {5.255, 5.255, 5.255, 5.255, 5.255, 5.255, 5.255};
+    data = {ex0000, ex0000, ex0000, ex0000, ex0000, ex0000, ex0000};
+    Ex_values = {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000};
   } else {
     data = {ex1982, ex3530, ex3920, ex5255};
     Ex_values = {1.982, 3.553, 3.920, 5.255};
@@ -110,7 +112,10 @@ void angular_dist_17O() {
   std::vector<TGraph*> graphs;
 
   //TFile *file = TFile::Open("../working/DWBA_17O_more_states.root");
-  TFile *file = TFile::Open("DWBA_17O_pot_5255.root");
+  //TFile *file = TFile::Open("DWBA_17O_pot_5255.root");
+  //TFile *file = TFile::Open("DWBA_17O_pot_gs.root");
+
+  TFile *file = TFile::Open("DWBA_17O.root");
   
   if (!file || file->IsZombie()) {
     std::cerr << "Error opening ROOT file!" << std::endl;
@@ -141,7 +146,7 @@ void angular_dist_17O() {
   std::cout << "Mappings " << std::endl;
 
   if (checking_gs) {
-    fitMappings = {
+    /*fitMappings = {
       {ex5255, {0, 7, 14, 21, 28}},
       {ex5255, {1, 8, 15, 22, 29}},
       {ex5255, {2, 9, 16, 23, 30}},
@@ -158,23 +163,41 @@ void angular_dist_17O() {
       {{4}, {11}, {18}, {25}, {32}},
       {{5}, {12}, {19}, {26}, {33}},
       {{6}, {13}, {20}, {27}, {34}},
+      };*/
+    fitMappings = {
+      {ex0000, {0, 7, 14, 21, 28}},
+      {ex0000, {1, 8, 15, 22, 29}},
+      {ex0000, {2, 9, 16, 23, 30}},
+      {ex0000, {3, 10, 17, 24, 31}},
+      {ex0000, {4, 11, 18, 25, 32}},
+      {ex0000, {5, 12, 19, 26, 33}},
+      {ex0000, {6, 13, 20, 27, 34}},
+    };
+    fitPairs =  {
+      {{0}, {7}, {14}, {21}, {28}},
+      {{1}, {8}, {15}, {22}, {29}},
+      {{2}, {9}, {16}, {23}, {30}},
+      {{3}, {10}, {17}, {24}, {31}},
+      {{4}, {11}, {18}, {25}, {32}},
+      {{5}, {12}, {19}, {26}, {33}},
+      {{6}, {13}, {20}, {27}, {34}},
     };
   } else {
     fitMappings = {
       {ex1982, {0, 1, 2, 3, 4}},
       //{ex3552, {5, 6, 7, 8, 9}},
       //{ex3630, {10, 11, 12}},
-      {ex3920, {13, 14, 15, 16, 17, 18}},
-      {ex5255, {19, 20, 21, 22}},
       {ex3530, {5, 6, 7, 8, 9, 10, 11, 12}},
+      {ex3920, {13, 14, 15, 16, 17, 18}},
+      {ex5255, {19, 20, 21, 22}}
     };
     fitPairs =  {
-      {{0, 2, 3}, {0, 2}, {0, 3}, {1, 4}},
+      {{0, 2, 3}, {0, 2}, {0, 3}, {1, 4}, {1}, {0}, {2}},
       //{{5}, {6}, {5, 6}, {8, 9}},
       //{{10}, {11}, {12}, {10, 11}},
-      {{13}, {17, 18}, {15, 16}, {14, 15}},
-      {{19}, {20, 21}, {19, 22}},
-      {{5}, {10}, {5, 6}, {8, 9}},
+      {{5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {5, 6}, {8, 9}},
+      {{13}, {15, 16}, {14, 15}, {14}, {16}, {15}, {17}},
+      {{19}, {20, 21}, {19, 22}, {21}, {22}, {20}}
     };
   }
 
@@ -186,18 +209,16 @@ void angular_dist_17O() {
   std::ofstream resultFile;
 
   if (checking_gs) {
-    resultFile.open("plots_17O/ang_dist/checking_5255_DWBA_fit_results_17O.txt");
+    //resultFile.open("plots_17O/ang_dist/checking_5255_DWBA_fit_results_17O.txt");
+    resultFile.open("plots_17O/ang_dist/checking_gs_DWBA_fit_results_17O.txt");
   } else {
     resultFile.open("plots_17O/ang_dist/DWBA_fit_results_17O.txt");
   }
 
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
-    std::cout << "Inside loop " << std::endl;
     const auto& dataSet = fitMappings[mappingIndex].first;
     const auto& fitIndices = fitMappings[mappingIndex].second;
     //auto allCombinations = generateCombinations(fitIndices);
-
-    std::cout << "After combinations " << std::endl;
 
     double bestChi2 = 1e9;
     std::vector<int> bestCombination;
@@ -206,6 +227,14 @@ void angular_dist_17O() {
     ncolor = 0;
 
     std::cout << "===========================================================================" << std::endl;
+    std::cout << "===========================================================================" << std::endl;
+    std::cout << "===========================================================================" << std::endl;
+    std::cout << "Energy " << Ex_values[mappingIndex] << std::endl << std::endl;
+
+    resultFile << "===========================================================================" << endl;
+    resultFile << "===========================================================================" << endl;
+    resultFile << "===========================================================================" << endl;
+    resultFile << "Energy " << Ex_values[mappingIndex] << endl << endl;
 
     std::vector<double> theta_means;
     std::vector<double> int_corr_sins;
@@ -258,7 +287,7 @@ void angular_dist_17O() {
     //legend->AddEntry(experimentGraph, "Data Points", "p");
 
     for (int fitIndex : fitIndices) {
-      std::cout << "dataSet: " << mappingIndex << " fitIndex: " << fitIndex << std::endl;
+      std::cout << "dataSet: " << mappingIndex << " fitIndex: " << fitIndex  << "    " << graphsDWBA[fitIndex]->GetName() << std::endl;
       TGraph* fitGraph = graphsDWBA[fitIndex];
       fitGraph->SetLineColor(color[ncolor]);
       fitGraph->SetLineWidth(2);
@@ -347,15 +376,18 @@ void angular_dist_17O() {
     bestFitFunction->SetLineColor(kRed);
     bestFitFunction->SetLineWidth(4);
     bestFitFunction->Draw("SAME");
-    cout<<"Best combination: "<<endl;
-    for(const auto& element : bestCombination)
-      cout<<element<<endl;
+    cout << "Best combination: " << endl;
+    resultFile << "Best combination: " << endl;
+    for(const auto& element : bestCombination){
+      cout << element << "   " << graphsDWBA[element]->GetName() << endl;
+      resultFile << element << "   " << graphsDWBA[element]->GetName() << endl;
+    }
 
     canvas->SetLogy();
 
     legend->Draw();
     if (checking_gs)
-      canvas->SaveAs(Form("plots_17O/ang_dist/checking_gs/fit_5255_%lu.png", mappingIndex + 1));
+      canvas->SaveAs(Form("plots_17O/ang_dist/checking_gs/fit_gs_%lu.png", mappingIndex + 1));
     else
       canvas->SaveAs(Form("plots_17O/ang_dist/fit_Ex_%lu.png", mappingIndex + 1));
   }
