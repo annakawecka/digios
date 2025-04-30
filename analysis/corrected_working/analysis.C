@@ -205,6 +205,7 @@ void analysis(){
   TH1F* Ex_nogates = new TH1F("Ex_nogates", "Ex, no gates", 200, -2, 12);
   TH2F* EZ_nogates = new TH2F("EZ_nogates", "e vs z, no gates", 1000, -600, -200, 200, 0, 12);
   TH2F* EZ_gated = new TH2F("EZ_gated", "e vs z, gated", 1000, -600, -200, 200, 0, 12);
+  TH2F* EZ_gated_without0 = new TH2F("EZ_gated_without0", "e vs z, gated", 1000, -600, -200, 200, 0, 12);
   TH2F* EZ_gated_2turns = new TH2F("EZ_gated_2turns", "e vs z, gated, 2 turns", 1000, -600, -200, 200, 0, 12);
   TH2F* EZ_gated_3turns = new TH2F("EZ_gated_3turns", "e vs z, gated, 3 turns", 1000, -600, -200, 200, 0, 12);
   
@@ -294,17 +295,10 @@ void analysis(){
       continue;
     }
 
-    // correcting e
-
-    eCorr = e[detID]/eCorrections[detID][0] + eCorrections[detID][1];
+    if (detID == 0)
+      Ex = Ex + 1.22921;
 
     EZ_nogates->Fill(z[detID], e[detID]);
-
-    // calculating corrected Ex and ThetaCM
-
-    double y = eCorr + mass;
-    Z = alpha * gamma * beta * z[detID];
-    H = TMath::Sqrt(TMath::Power(gamma * beta,2) * (y*y - mass * mass) ) ;
 
     if (coinTimeCorr > -20 && coinTimeCorr < 15) {
       cointimegate = true;
@@ -342,7 +336,8 @@ void analysis(){
     if (xgate && rdtgate) {
       correctedCoinTimeXgateRDTCoin[detID]->Fill(coinTimeCorr);
 
-      if (cointimegate && !(detID == 0)) {
+      //if (cointimegate && !(detID == 0)) {
+      if (cointimegate) {
 	x_rdt_coinTime_gatedEx->Fill(Ex);
 
 	Ex_d[detID % 6]->Fill(Ex);
@@ -350,6 +345,9 @@ void analysis(){
 	Ex_single[detID]->Fill(Ex);
 
 	EZ_gated->Fill(z[detID], e[detID]);
+
+	if (!(detID == 0))
+	  EZ_gated_without0->Fill(z[detID], e[detID]);
 
 	if (detID <= 5)
 	  side1++;
@@ -515,6 +513,10 @@ void analysis(){
     TCanvas *cEZgated = new TCanvas("cEZgated", "e vs z, gated", 800, 600);
     EZ_gated->Draw();
     cEZgated->SaveAs((folderName + "/EZ_gated.png").c_str());
+
+    TCanvas *cEZgatedNo0 = new TCanvas("cEZgatedNo0", "e vs z, gated", 800, 600);
+    EZ_gated_without0->Draw();
+    cEZgatedNo0->SaveAs((folderName + "/EZ_gated_without_det0.png").c_str());
 
     TCanvas *cEZgated2turns = new TCanvas("cEZgated2turns", "e vs z, gated, 2 turns", 800, 600);
     EZ_gated_2turns->Draw();
