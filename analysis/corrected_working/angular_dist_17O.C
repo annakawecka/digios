@@ -77,9 +77,15 @@ void angular_dist_17O() {
   };
 
   std::vector<std::vector<double>> ex5255 = {
-    {11.93,	20.37,	8.44,	16.15,	2.347611196,	24.781, 1.152},
-    {21.86,	26.94,	5.08,	24.4,	2.098570501,	20.298, 1.696},
-    {27.99,	32.09,	4.1,	30.04,	2.052478357,	24.758, 1.453}
+    //{11.93,	20.37,	8.44,	16.15,	2.347611196,	24.781, 1.152},
+    //{21.86,	26.94,	5.08,	24.4,	2.098570501,	20.298, 1.696},
+    //{27.99,	32.09,	4.1,	30.04,	2.052478357,	24.758, 1.453}
+    {11.72, 16.82, 5.10, 14.27, 1.2572, 30.5117, 0},
+    {17.03, 20.46, 3.42, 18.74, 1.0998, 8.16286, 0},
+    {21.78, 24.47, 2.69, 23.12, 1.0551, 8.96801*4./3., 0},
+    {24.60, 27.00, 2.40, 25.80, 1.0437, 13.934*4./3., 0},
+    {27.93, 30.05, 2.13, 28.99, 1.0312, 13.9637*4./3., 0},
+    {30.16, 32.14, 1.98, 31.15, 1.0263, 13.5845*4./3., 0}
   };
 
   std::vector<std::vector<double>> ex3530 = {
@@ -112,10 +118,15 @@ void angular_dist_17O() {
   std::vector<TGraph*> graphs;
 
   //TFile *file = TFile::Open("../working/DWBA_17O_more_states.root");
-  //TFile *file = TFile::Open("DWBA_17O_pot_5255.root");
-  //TFile *file = TFile::Open("DWBA_17O_pot_gs.root");
 
-  TFile *file = TFile::Open("DWBA_17O.root");
+  TFile *file;
+  
+  if (checking_gs) {
+    //TFile *file = TFile::Open("DWBA_17O_pot_5255.root");
+    file = TFile::Open("DWBA_17O_pot_gs.root");
+  }
+  else
+    file = TFile::Open("DWBA_17O.root");
   
   if (!file || file->IsZombie()) {
     std::cerr << "Error opening ROOT file!" << std::endl;
@@ -163,7 +174,8 @@ void angular_dist_17O() {
       {{4}, {11}, {18}, {25}, {32}},
       {{5}, {12}, {19}, {26}, {33}},
       {{6}, {13}, {20}, {27}, {34}},
-      };*/
+      };
+    */
     fitMappings = {
       {ex0000, {0, 7, 14, 21, 28}},
       {ex0000, {1, 8, 15, 22, 29}},
@@ -181,7 +193,8 @@ void angular_dist_17O() {
       {{4}, {11}, {18}, {25}, {32}},
       {{5}, {12}, {19}, {26}, {33}},
       {{6}, {13}, {20}, {27}, {34}},
-    };
+      };
+    
   } else {
     fitMappings = {
       {ex1982, {0, 1, 2, 3, 4}},
@@ -197,7 +210,8 @@ void angular_dist_17O() {
       //{{10}, {11}, {12}, {10, 11}},
       {{5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {5, 6}, {8, 9}},
       {{13}, {15, 16}, {14, 15}, {14}, {16}, {15}, {17}},
-      {{19}, {20, 21}, {19, 22}, {21}, {22}, {20}}
+      //{{19}, {20, 21}, {19, 22}, {21}, {22}, {20}}
+      {{19}, {20, 21}, {21}, {22}, {20}}
     };
   }
 
@@ -209,8 +223,8 @@ void angular_dist_17O() {
   std::ofstream resultFile;
 
   if (checking_gs) {
-    //resultFile.open("plots_17O/ang_dist/checking_5255_DWBA_fit_results_17O.txt");
-    resultFile.open("plots_17O/ang_dist/checking_gs_DWBA_fit_results_17O.txt");
+    //resultFile.open("plots_17O/ang_dist/checking_5255_DWBA_fit_results_17O_newUnc.txt");
+    resultFile.open("plots_17O/ang_dist/checking_gs_DWBA_fit_results_17O_newUnc.txt");
   } else {
     resultFile.open("plots_17O/ang_dist/DWBA_fit_results_17O.txt");
   }
@@ -231,10 +245,10 @@ void angular_dist_17O() {
     std::cout << "===========================================================================" << std::endl;
     std::cout << "Energy " << Ex_values[mappingIndex] << std::endl << std::endl;
 
+    /*resultFile << "===========================================================================" << endl;
     resultFile << "===========================================================================" << endl;
     resultFile << "===========================================================================" << endl;
-    resultFile << "===========================================================================" << endl;
-    resultFile << "Energy " << Ex_values[mappingIndex] << endl << endl;
+    resultFile << "Energy " << Ex_values[mappingIndex] << endl << endl;*/
 
     std::vector<double> theta_means;
     std::vector<double> int_corr_sins;
@@ -252,9 +266,10 @@ void angular_dist_17O() {
       
       theta_means.push_back(det[3]);
       int_corr_sins.push_back(det[5] / det[4] );
-      int_unc.push_back(integral_unc / sin_x_dx);
+      int_unc.push_back(TMath::Sqrt(integral_corr / sin_x_dx));
+      //int_unc.push_back(integral_unc / sin_x_dx);
       //int_unc.push_back(0.1);
-      x_unc.push_back(0.71);
+      x_unc.push_back(0.0);
     }
 
     TGraphErrors* experimentGraph = new TGraphErrors(theta_means.size(), &theta_means[0], &int_corr_sins[0], &x_unc[0], &int_unc[0]);
@@ -288,6 +303,7 @@ void angular_dist_17O() {
 
     for (int fitIndex : fitIndices) {
       std::cout << "dataSet: " << mappingIndex << " fitIndex: " << fitIndex  << "    " << graphsDWBA[fitIndex]->GetName() << std::endl;
+      //resultFile << "dataSet: " << mappingIndex << " fitIndex: " << fitIndex  << "    " << graphsDWBA[fitIndex]->GetName() << endl;
       TGraph* fitGraph = graphsDWBA[fitIndex];
       fitGraph->SetLineColor(color[ncolor]);
       fitGraph->SetLineWidth(2);
@@ -387,7 +403,8 @@ void angular_dist_17O() {
 
     legend->Draw();
     if (checking_gs)
-      canvas->SaveAs(Form("plots_17O/ang_dist/checking_gs/fit_gs_%lu.png", mappingIndex + 1));
+      canvas->SaveAs(Form("plots_17O/ang_dist/checking_gs/fit_gs_%lu_newUnc.png", mappingIndex + 1));
+      //canvas->SaveAs(Form("plots_17O/ang_dist/checking_gs/fit_5255_%lu_newUnc.png", mappingIndex + 1));
     else
       canvas->SaveAs(Form("plots_17O/ang_dist/fit_Ex_%lu.png", mappingIndex + 1));
   }

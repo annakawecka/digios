@@ -1,12 +1,13 @@
 #include "utilities.h"
 
-bool oxygen = false;
+bool oxygen = true;
 
 std::string isotope = oxygen ? "17O" : "17F";
 std::string folderName = "plots_" + isotope + "/";
 
 TString rdtCutFile = "rdtCuts_" + isotope + ".root";
 TString saveFileHists = "rings_" + isotope + ".root";
+TString saveFileHistsHalfDets = "rings_" + isotope + "_half_dets.root";
 TString saveFileHistsStrictTC = "rings_" + isotope + "_200bins_strict_tc.root";
 
 TObjArray * cutList;
@@ -34,6 +35,7 @@ double eCorrections[24][2]; // e-correction (kinematics)
 
 int numDet;
 std::vector<double> pos;
+std::vector<double> pos_half;
 double Bfield;
 double perpDist;
 double length;
@@ -118,6 +120,12 @@ void analysis(){
   }
 
   numDet = detGeo.nDet * detGeo.mDet;
+
+  for (auto it = pos.begin(); it != pos.end(); ++it) {
+    pos_half.push_back(*it - 25.);
+    pos_half.push_back(*it);
+    std::cout << *it - 25. << std::endl << *it << std::endl;
+  }
 
   //========================================= reaction parameters
   printf("loading reaction parameter.");
@@ -210,6 +218,7 @@ void analysis(){
   TH2F* EZ_gated_3turns = new TH2F("EZ_gated_3turns", "e vs z, gated, 3 turns", 1000, -600, -200, 200, 0, 12);
   
   std::vector<TH1F*> Ex_d; // Array to store histograms for Ex_d0, Ex_d1, ..., Ex_d5
+  std::vector<TH1F*> Ex_d_half_dets;
   std::vector<TH1F*> Ex_d_strict_tc;
   std::vector<TH1F*> Ex_single; // Array to store histograms for Ex for all detectors individually 
   
@@ -221,6 +230,12 @@ void analysis(){
     Ex_d.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_strict_tc", i);
     Ex_d_strict_tc.push_back(new TH1F(histName, histName, 200, -2, 12));
+  }
+
+  for (int i = 0; i < 12; ++i) {
+    TString histName;
+    histName.Form("Ex_d%d_half_dets", i);
+    Ex_d_half_dets.push_back(new TH1F(histName, histName, 200, -2, 12));
   }
 
    printf("After initialising Ex_d histograms\n");
@@ -256,6 +271,13 @@ void analysis(){
   chain->SetBranchAddress("z", z);
   chain->SetBranchAddress("e", e);
   chain->SetBranchAddress("detID", &detID);
+
+  for (size_t ii = 0; ii < pos_half.size(); ++ii) {
+    double z_start = pos_half[ii] - 25.;
+    double z_end = (ii + 1 < pos_half.size()) ? pos_half[ii] : -220.;
+
+    std::cout << z_start << " :: " << z_end << std::endl;
+  }
 
   // Loop over the events and apply the cut
   Long64_t nEntries = chain->GetEntries();
@@ -359,6 +381,18 @@ void analysis(){
 	  side4++;
 
 	countIn[detID]++;
+
+	for (size_t ii = 0; ii < pos_half.size(); ii++) {
+	  double z_start = pos_half[ii] - 25.;
+	  double z_end = (ii + 1 < pos_half.size()) ? pos_half[ii] : -220.;
+
+	  // std::cout << z_start << " :: " << z_end << std::endl;
+
+	  if (z[detID] >= z_start && z[detID] < z_end) {
+	    Ex_d_half_dets[ii]->Fill(Ex);
+	    break;
+	  }
+	}
       }
 
       if (strict_cointimegate && !(detID == 0))
@@ -388,6 +422,13 @@ void analysis(){
     Ex_d[ii]->Write();
 
   outputFile->Close();
+
+  TFile* outputFileHalfDets = new TFile(saveFileHistsHalfDets, "RECREATE");
+
+  for (int ii = 0; ii < 12; ++ii)
+    Ex_d_half_dets[ii]->Write();
+
+  outputFileHalfDets->Close();
 
   TFile* outputFileStrictTC = new TFile(saveFileHistsStrictTC, "RECREATE");
 
@@ -486,7 +527,8 @@ void analysis(){
 
     TCanvas *cGatedEx = new TCanvas("cGatedEx", "Ex gated on x, recoils and coinTime", 800, 600);
     x_rdt_coinTime_gatedEx->Draw();
-    cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
+    //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
+    x_rdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.root").c_str());
 
     TCanvas *cRDTCoinTimeGatedEx = new TCanvas("cRDTCoinTimeGatedEx", "Ex gated on recoils and coinTime", 800, 600);
     rdt_coinTime_gatedEx->Draw();
