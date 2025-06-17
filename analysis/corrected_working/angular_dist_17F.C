@@ -13,6 +13,12 @@ std::vector<TGraph*> graphsDWBA;
 int nr_of_functions = 0;
 int functions_ids[10] = {0,0,0,0,0,0,0,0,0,0};
 
+std::vector<TString> potentials = {
+        "AV", "HV", "HM", "HG", "HP", "BK", "BV", "BM", "BG", "BP",
+        "DK", "DV", "DM", "DG", "DP", "QK", "QV", "QM", "QG", "QP",
+        "ZK", "ZV", "ZM", "ZG", "ZP"
+    };
+
 bool checking_gs = false;
 
 double combinedDWBA(double *x, double *par) {
@@ -113,13 +119,19 @@ void angular_dist_17F() {
   //TFile *file = TFile::Open("../working/DWBA_17O_more_states.root");
 
   TFile *file;
+
+  const auto& pot = potentials[24];
+
+  TString filename = Form("DWBA_17F_%s.root", pot.Data());
+  TString outputDir = Form("plots_17F/ang_dist/%s", pot.Data());
+  gSystem->mkdir(outputDir, kTRUE);
   
   if (checking_gs) {
     //TFile *file = TFile::Open("DWBA_17O_pot_5255.root");
     file = TFile::Open("DWBA_17O_pot_gs.root");
   }
   else
-    file = TFile::Open("DWBA_17F_AK.root");
+    file = TFile::Open(filename);
   
   if (!file || file->IsZombie()) {
     std::cerr << "Error opening ROOT file!" << std::endl;
@@ -179,7 +191,8 @@ void angular_dist_17F() {
     //resultFile.open("plots_17O/ang_dist/checking_5255_DWBA_fit_results_17O_newUnc.txt");
     resultFile.open("plots_17F/ang_dist/checking_gs_DWBA_fit_results_17O_newUnc.txt");
   } else {
-    resultFile.open("plots_17F/ang_dist/DWBA_fit_results_17F.txt");
+    TString outputFilename = Form("%s/DWBA_fit_results_17F.txt", outputDir.Data());
+    resultFile.open(outputFilename);
   }
 
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
@@ -382,8 +395,10 @@ void angular_dist_17F() {
     if (checking_gs)
       canvas->SaveAs(Form("plots_17F/ang_dist/checking_gs/fit_gs_%lu_newUnc.png", mappingIndex + 1));
       //canvas->SaveAs(Form("plots_17O/ang_dist/checking_gs/fit_5255_%lu_newUnc.png", mappingIndex + 1));
-    else
-      canvas->SaveAs(Form("plots_17F/ang_dist/fit_Ex_%lu.png", mappingIndex + 1));
+    else {
+      TString outputFilename = Form("%s/fit_Ex_%lu.png", outputDir.Data(), mappingIndex + 1);
+      canvas->SaveAs(outputFilename);
+    }
   }
   
   resultFile.close();
