@@ -13,7 +13,17 @@ std::vector<TGraph*> graphsDWBA;
 int nr_of_functions = 0;
 int functions_ids[10] = {0,0,0,0,0,0,0,0,0,0};
 
-bool checking_gs = true;
+std::vector<TString> potentials = {
+  "AK", "AV", "AM", "AG", "AP",
+  "HK", "HV", "HM", "HG", "HP",
+  "BK", "BV", "BM", "BG", "BP",
+  "DK", "DV", "DM", "DG", "DP",
+  "QK", "QV", "QM", "QG", "QP",
+  "ZK", "ZV", "ZM", "ZG", "ZP",
+  "LK", "LV", "LM", "LG", "LP"
+};
+
+bool checking_gs = false;
 
 double combinedDWBA(double *x, double *par) {
   double result = 0;
@@ -43,7 +53,7 @@ std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indic
   return combinations;
 }
 
-void angular_dist_17O_half_dets() {
+void angular_dist_17O_half_dets(int pot_nr = 0) {
 
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, integral_unc;
 
@@ -126,13 +136,19 @@ void angular_dist_17O_half_dets() {
   //TFile *file = TFile::Open("../working/DWBA_17O_more_states.root");
 
   TFile *file;
+
+  const auto& pot = potentials[pot_nr];
+
+  TString filename = Form("DWBA_17O_%s.root", pot.Data());
+  TString outputDir = Form("plots_17O/ang_dist_half_dets/%s", pot.Data());
+  gSystem->mkdir(outputDir, kTRUE);
   
   if (checking_gs) {
     file = TFile::Open("DWBA_17O_pot_5255.root");
     //file = TFile::Open("DWBA_17O_pot_gs.root");
   }
   else
-    file = TFile::Open("DWBA_17O.root");
+    file = TFile::Open(filename);
   
   if (!file || file->IsZombie()) {
     std::cerr << "Error opening ROOT file!" << std::endl;
@@ -221,7 +237,7 @@ void angular_dist_17O_half_dets() {
       //{{5}, {6}, {5, 6}, {8, 9}},
       //{{10}, {11}, {12}, {10, 11}},
       {{5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {5, 6}, {8, 9}},
-      {{13}, {15, 16}, {14, 15}, {14}, {16}, {15}, {17}},
+      {{13}, {15, 13}, {15, 14}, {15, 16}, {14}, {16}, {15}, {17}},
       {{19}, {20, 21}, {19, 22}, {21}, {22}, {20}}
     };
   }
@@ -237,7 +253,8 @@ void angular_dist_17O_half_dets() {
     //resultFile.open("plots_17O/ang_dist/checking_5255_DWBA_fit_results_17O_newUnc.txt");
     resultFile.open("plots_17O/ang_dist_half_dets/checking_gs_DWBA_fit_results_17O.txt");
   } else {
-    resultFile.open("plots_17O/ang_dist/DWBA_fit_results_17O.txt");
+    TString outputFilename = Form("%s/DWBA_fit_results_17O.txt", outputDir.Data());
+    resultFile.open(outputFilename);
   }
 
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
@@ -416,8 +433,10 @@ void angular_dist_17O_half_dets() {
     if (checking_gs)
       //canvas->SaveAs(Form("plots_17O/ang_dist_half_dets/checking_gs/fit_gs_%lu_newUnc.png", mappingIndex + 1));
       canvas->SaveAs(Form("plots_17O/ang_dist_half_dets/checking_gs/fit_5255_%lu.png", mappingIndex + 1));
-    else
-      canvas->SaveAs(Form("plots_17O/ang_dist/fit_Ex_%lu.png", mappingIndex + 1));
+    else {
+      TString outputFilename = Form("%s/fit_Ex_%lu.png", outputDir.Data(), mappingIndex + 1);
+      canvas->SaveAs(outputFilename);
+    }
   }
   
   resultFile.close();
