@@ -61,9 +61,9 @@ void performFitAndPlot(const std::string &histName, TH1 *hist, const std::vector
     }
 
     fitFunc->SetNpx(2000);
-    hist->Fit(fitFunc, "R");
+    hist->Fit(fitFunc, "RLB"); // also L for likelihood, bounds
 
-    std::string plotDir = "plots_17F/fitting/" + outputSuffix;// + "_likelihood";
+    std::string plotDir = "plots_17F/fitting/" + outputSuffix + "_likelihood";
     std::filesystem::create_directories(plotDir);
     TCanvas *canvas = new TCanvas(("canvas_" + histName + outputSuffix).c_str(), histName.c_str(), 1600, 1200);
     canvas->cd();
@@ -139,6 +139,14 @@ void fitting_17F() {
 	  {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
 	  {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
 	  {     0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976}
+        },
+	{
+	  {0.0, 1.08, 1.4, 1.6, 1.9, 1.70081, 2.52335},
+	  {0.0, 1.08, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159},
+	  {0.0, 1.08, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.9636, 5.2976},
+	  {0.0, 1.08, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.9636, 5.2976},
+	  {0.0, 1.08, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.9636, 5.2976},
+	  {     1.08, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.9636, 5.2976}
         }
     };
 
@@ -149,10 +157,11 @@ void fitting_17F() {
     double sigma_mean = (sigma_low + sigma_high) / 2.;
     std::vector<double> sigmas = {sigma_low, sigma_mean, sigma_high};
 
-    std::string suffixes[] = {"", "_positive"};
+    std::string suffixes[] = {"", "_positive", "_positive_onepeak"};
     std::string outputFiles[] = {
       "plots_17F/fitting/fit_parameters_17F.txt",
-      "plots_17F/fitting/fit_parameters_17F_positive.txt"
+      "plots_17F/fitting/fit_parameters_17F_positive.txt",
+      "plots_17F/fitting/fit_parameters_17F_positive_onepeak.txt"
     };
     std::ofstream outFile1(outputFiles[0], std::ios::out | std::ios::trunc);
 
@@ -167,7 +176,7 @@ void fitting_17F() {
         }
 	}*/
 
-    for (int k = 0; k < 2; ++k) { // standard vs. "_positive"
+    for (int k = 0; k < 3; ++k) { // standard vs. "_positive" vs. single peak for 4652 and 4753 keV and 1.08
         for (double sigma : sigmas) {
             for (bool fixDist : {false, true}) {
                 std::string sigmaLabel = (std::abs(sigma - sigma_low) < 1e-5)   ? "_sigmaLow" :
@@ -175,7 +184,7 @@ void fitting_17F() {
                                                                                  "_sigmaMean";
                 std::string distLabel = fixDist ? "_fixedDist" : "_freeDist";
                 std::string fullSuffix = suffixes[k] + sigmaLabel + distLabel;
-                std::string fullOutputFile = "plots_17F/fitting/fit_parameters_17F" + fullSuffix + ".txt"; //"_likelihood.txt";
+                std::string fullOutputFile = "plots_17F/fitting/fit_parameters_17F" + fullSuffix + "_likelihood.txt";
 
                 std::ofstream outFile(fullOutputFile, std::ios::out | std::ios::trunc);
 
