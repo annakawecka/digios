@@ -133,6 +133,7 @@ void likelihoodFCN(Int_t &npar, Double_t *grad, Double_t &fval, Double_t *par, I
 // ---------- Fit routine using TMinuit (Poisson likelihood) ----------
 void fitHistogramLikelihoodTMinuit(TH1* hist,
                                    const std::vector<double>& peakPositions,
+				   TFile* outRootFile,
                                    const std::string &outTxtFilename = "fit_results.txt",
                                    bool savePlot = true) {
     if (!hist) {
@@ -210,7 +211,7 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
     }
 
     // Write results to file
-    std::ofstream out(outTxtFilename, std::ios::app);
+    std::ofstream out(outTxtFilename, std::ios::out | std::ios::trunc);
     out << "Histogram: " << hist->GetName() << "\n";
     for (int i = 0; i < nPars; ++i) {
       TString parName;
@@ -278,11 +279,14 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
     pt->Draw();
 
     if (savePlot) {
-        c->SaveAs(Form("plots_17O/minuit/fit_%s.png", hist->GetName()));
-        c->SaveAs(Form("plots_17O/minuit/fit_%s.root", hist->GetName()));
+        c->SaveAs(Form("plots_17O/minuit/fit_%s.png", hist->GetName())); // PNGs
+        if (outRootFile && outRootFile->IsOpen()) {
+            outRootFile->cd();
+            c->Write();
+        }
     }
 
-    std::ofstream outFile("plots_17O/minuit/fit_results.txt", std::ios::app);  // Append mode
+    std::ofstream outFile("plots_17O/minuit/fit_results_single.txt", std::ios::out | std::ios::trunc);  // Append mode
 
     outFile << "Fit results for histogram: " << hist->GetName() << "\n";
 
@@ -308,36 +312,98 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
 
 // ---------- Example top-level function to demonstrate usage ----------
 void fitting_17O_half_dets_minuit() {
-    TFile *f = TFile::Open("rings_17O_half_dets.root", "READ");
-    if (!f || f->IsZombie()) { std::cerr << "Cannot open file\n"; return; }
 
-    std::vector<std::string> histNames = {"Ex_d0_half_dets", "Ex_d1_half_dets", "Ex_d2_half_dets", "Ex_d3_half_dets", "Ex_d4_half_dets", "Ex_d5_half_dets",
-					  "Ex_d6_half_dets", "Ex_d7_half_dets", "Ex_d8_half_dets", "Ex_d9_half_dets", "Ex_d10_half_dets", "Ex_d11_half_dets"};
+  // fitting rings
+  /*TFile *f = TFile::Open("rings_17O_half_dets.root", "READ");
+  if (!f || f->IsZombie()) { std::cerr << "Cannot open file\n"; return; }
 
-    // peak sets for each histogram (example)
-    std::vector<std::vector<double>> peakSets = {
-      {0.0},
-      {0.0},
-      {0.0, 1.982},
-      {0.0, 1.982},
-      {0.0, 1.982, 3.552, 3.63, 3.92},
-      {0.0, 1.982, 3.552, 3.63, 3.92},
-      {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
-      {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
-      {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
-      {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
-      {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
-      {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11}
+  std::vector<std::string> histNames = {"Ex_d0_half_dets", "Ex_d1_half_dets", "Ex_d2_half_dets", "Ex_d3_half_dets", "Ex_d4_half_dets", "Ex_d5_half_dets",
+					"Ex_d6_half_dets", "Ex_d7_half_dets", "Ex_d8_half_dets", "Ex_d9_half_dets", "Ex_d10_half_dets", "Ex_d11_half_dets"};
+
+  // peak sets for each histogram (example)
+  std::vector<std::vector<double>> peakSets = {
+    {0.0},
+    {0.0},
+    {0.0, 1.982},
+    {0.0, 1.982},
+    {0.0, 1.982, 3.552, 3.63, 3.92},
+    {0.0, 1.982, 3.552, 3.63, 3.92},
+    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
+    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11}
+    };*/
+
+  // fitting individual detectors
+  TFile *f = TFile::Open("rings_17O_single_dets.root", "READ");
+  if (!f || f->IsZombie()) { std::cerr << "Cannot open file\n"; return; }
+
+  std::vector<std::string> histNames = {"Ex_single_det0",
+					"Ex_single_det1",
+					"Ex_single_det2",
+					"Ex_single_det3",
+					"Ex_single_det4",
+					"Ex_single_det5",
+					"Ex_single_det6",
+					"Ex_single_det7",
+					"Ex_single_det8",
+					"Ex_single_det9",
+					"Ex_single_det10",
+					"Ex_single_det11",
+					"Ex_single_det12",
+					"Ex_single_det13",
+					"Ex_single_det14",
+					"Ex_single_det15",
+					"Ex_single_det16",
+					"Ex_single_det17",
+					"Ex_single_det18",
+					"Ex_single_det19",
+					"Ex_single_det20",
+					"Ex_single_det21",
+					"Ex_single_det22",
+					"Ex_single_det23"
+  };
+
+  // peak sets for each histogram (example)
+  std::vector<std::vector<double>> peakSets = {
+    {0.0},
+    {0.0, 1.982},
+    {0.0, 1.982, 3.552, 3.63, 3.92},
+    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {0.0},
+    {0.0, 1.982},
+    {0.0, 1.982, 3.552, 3.63, 3.92},
+    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {0.0},
+    {0.0, 1.982},
+    {0.0, 1.982, 3.552, 3.63, 3.92},
+    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {0.0},
+    {0.0, 1.982},
+    {0.0, 1.982, 3.552, 3.63, 3.92},
+    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
+    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
     };
 
-    for (size_t i = 0; i < histNames.size(); ++i) {
-        TH1 *h = dynamic_cast<TH1*>(f->Get(histNames[i].c_str()));
-        if (!h) { std::cerr << "Histogram " << histNames[i] << " not found\n"; continue; }
+  TFile allFits("plots_17O/minuit/all_fits_single_dets.root", "RECREATE");
 
-        std::cout << "Fitting " << histNames[i] << " ...\n";
-        // automatic initial amplitudes estimated inside fit function, so just pass peakPositions
-        fitHistogramLikelihoodTMinuit(h, peakSets[i], "fit_results_all.txt", true);
-    }
+  for (size_t i = 0; i < histNames.size(); ++i) {
+    TH1 *h = dynamic_cast<TH1*>(f->Get(histNames[i].c_str()));
+    if (!h) { std::cerr << "Histogram " << histNames[i] << " not found\n"; continue; }
 
-    f->Close();
+    std::cout << "Fitting " << histNames[i] << " ...\n";
+    // automatic initial amplitudes estimated inside fit function, so just pass peakPositions
+    fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17O/minuit/fit_results_all_single.txt", true);
+  }
+
+  f->Close();
 }
