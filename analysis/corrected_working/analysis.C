@@ -9,6 +9,7 @@ TString rdtCutFile = "rdtCuts_" + isotope + ".root";
 TString saveFileHists = "rings_" + isotope + ".root";
 TString saveFileHistsHalfDets = "rings_" + isotope + "_half_dets.root";
 TString saveFileHistsStrictTC = "rings_" + isotope + "_200bins_strict_tc.root";
+TString saveFileHistsSingle = "rings_" + isotope + "_single_dets.root";
 
 TObjArray * cutList;
 Bool_t isCutFileOpen;
@@ -436,6 +437,13 @@ void analysis(){
     Ex_d_strict_tc[ii]->Write();
 
   outputFileStrictTC->Close();
+
+   TFile* outputFileSingle = new TFile(saveFileHistsSingle, "RECREATE");
+
+  for (int ii = 0; ii < 24; ++ii)
+    Ex_single[ii]->Write();
+
+  outputFileSingle->Close();
 
 
   //================================= fitting 17O
