@@ -202,8 +202,8 @@ void fitHistogramLikelihoodTMinuitFreePos(TH1* hist,
   int ierrflg = 0;
     
   // Background intercept and slope
-  minuit.mnparm(0, "BG_intercept",  hist->GetBinContent(hist->FindBin((fitMin+fitMax)/2.0)), 0.01, 0, 10., ierrflg);
-  minuit.mnparm(1, "BG_slope",      0.0, 0.01, 0, 0., ierrflg);
+  minuit.mnparm(0, "BG_intercept",  hist->GetBinContent(hist->FindBin((fitMin+fitMax)/2.0)), 0.01, 0.0, 3., ierrflg);
+  minuit.mnparm(1, "BG_slope",      0.0, 0.01, 0.0, 0.0, ierrflg);
 
   // sigma0, sigma1: choose reasonable limits so sigma near expected [0.075, 0.1]
   minuit.mnparm(2, "Sigma0", 0.085, 0.001, 0.07, 0.1, ierrflg);    // intercept
@@ -321,14 +321,14 @@ void fitHistogramLikelihoodTMinuitFreePos(TH1* hist,
   pt->Draw();
 
   if (savePlot) {
-    c->SaveAs(Form("plots_17O/minuit/fit_%s_free.png", hist->GetName())); // PNGs
+    c->SaveAs(Form("plots_17F/minuit/fit_%s_free.png", hist->GetName())); // PNGs
     if (outRootFile && outRootFile->IsOpen()) {
       outRootFile->cd();
       c->Write();
     }
   }
 
-  std::ofstream outFile("plots_17O/minuit/fit_results_single_freePos.txt", std::ios::app);  // Append mode
+  std::ofstream outFile("plots_17F/minuit/fit_results_single_freePos.txt", std::ios::app);  // Append mode
 
   outFile << "Fit results for histogram: " << hist->GetName() << "\n";
 
@@ -402,8 +402,8 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
 
   // --- Define parameters (index, name, start, step, lower, upper, ierflg) ---
   // Background
-  minuit.mnparm(0, "BG_intercept",  hist->GetBinContent(hist->FindBin((fitMin+fitMax)/2.0)), 0.1, 0, 0, ierflg);
-  minuit.mnparm(1, "BG_slope",      0.0, 0.01, 0, 0, ierflg);
+  minuit.mnparm(0, "BG_intercept",  hist->GetBinContent(hist->FindBin((fitMin+fitMax)/2.0)), 0.01, 0., 5., ierflg);
+  minuit.mnparm(1, "BG_slope",      0.0, 0.01, 0., 0.01, ierflg);
 
   // sigma0, sigma1: choose reasonable limits so sigma near expected [0.075, 0.1]
   minuit.mnparm(2, "Sigma0", 0.085, 0.001, 0.07, 0.1, ierflg);    // intercept
@@ -516,14 +516,14 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
   pt->Draw();
 
   if (savePlot) {
-    c->SaveAs(Form("plots_17O/minuit/fit_%s.png", hist->GetName())); // PNGs
+    c->SaveAs(Form("plots_17F/minuit/fit_%s.png", hist->GetName())); // PNGs
     if (outRootFile && outRootFile->IsOpen()) {
       outRootFile->cd();
       c->Write();
     }
   }
 
-  std::ofstream outFile("plots_17O/minuit/fit_results_single.txt", std::ios::app);  // Append mode
+  std::ofstream outFile("plots_17F/minuit/fit_results_single.txt", std::ios::app);  // Append mode
 
   outFile << "Fit results for histogram: " << hist->GetName() << "\n";
 
@@ -548,10 +548,10 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
 }
 
 // ---------- Example top-level function to demonstrate usage ----------
-void fitting_17O_half_dets_minuit() {
+void fitting_17F_half_dets_minuit() {
 
   // fitting rings
-  /*TFile *f = TFile::Open("rings_17O_half_dets.root", "READ");
+  TFile *f = TFile::Open("rings_17F_half_dets.root", "READ");
   if (!f || f->IsZombie()) { std::cerr << "Cannot open file\n"; return; }
 
   std::vector<std::string> histNames = {"Ex_d0_half_dets", "Ex_d1_half_dets", "Ex_d2_half_dets", "Ex_d3_half_dets", "Ex_d4_half_dets", "Ex_d5_half_dets",
@@ -559,22 +559,36 @@ void fitting_17O_half_dets_minuit() {
 
   // peak sets for each histogram (example)
   std::vector<std::vector<double>> peakSets = {
-    {0.0},
-    {0.0},
-    {0.0, 1.982},
-    {0.0, 1.982},
-    {0.0, 1.982, 3.552, 3.63, 3.92},
-    {0.0, 1.982, 3.552, 3.63, 3.92},
-    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
-    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255},
-    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
-    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
-    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11},
-    {1.982, 3.552, 3.63, 3.92, 5.255, 6.2, 7.11}
-    };*/
+    /*{0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258, 4.36015, 4.3981, 4.652, 4.753, 4.8483, 4.860, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258, 4.36015, 4.3981, 4.652, 4.753, 4.8483, 4.860, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258, 4.36015, 4.3981, 4.652, 4.753, 4.8483, 4.860, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258, 4.36015, 4.3981, 4.652, 4.753, 4.8483, 4.860, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258, 4.36015, 4.3981, 4.652, 4.753, 4.8483, 4.860, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258, 4.36015, 4.3981, 4.652, 4.753, 4.8483, 4.860, 4.9636, 5.2976},
+    {0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258, 4.36015, 4.3981, 4.652, 4.753, 4.8483, 4.860, 4.9636, 5.2976},
+    {0.9372, 1.04155, 1.08054, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.10061, 2.52335, 3.06184, 3.13387, 3.3582, 3.72419, 3.79149, 3.83917, 4.1159, 4.2258, 4.36015, 4.3981, 4.652, 4.753, 4.8483, 4.860, 4.9636, 5.2976},*/
+
+
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976}
+  };
 
   // fitting individual detectors
-  TFile *f = TFile::Open("rings_17O_single_dets.root", "READ");
+  /*TFile *f = TFile::Open("rings_17F_single_dets.root", "READ");
   if (!f || f->IsZombie()) { std::cerr << "Cannot open file\n"; return; }
 
   std::vector<std::string> histNames = {"Ex_single_det0",
@@ -629,10 +643,10 @@ void fitting_17O_half_dets_minuit() {
     {1.98207, 3.55484, 3.63376, 3.92044, 5.2548},
     {1.98207, 3.55484, 3.63376, 3.92044, 5.2548},//, 6.19822, 7.1169},
     {1.98207, 3.55484, 3.63376, 3.92044, 5.2548},//, 6.19822, 7.1169}
-    };
+    };*/
 
-  //TFile allFits("plots_17O/minuit/all_fits_single_dets.root", "RECREATE");
-  TFile allFits("plots_17O/minuit/all_fits_single_dets_freePos.root", "RECREATE");
+  TFile allFits("plots_17F/minuit/all_fits_single_dets.root", "RECREATE");
+  //TFile allFits("plots_17F/minuit/all_fits_single_dets_freePos.root", "RECREATE");
 
   for (size_t i = 0; i < histNames.size(); ++i) {
     TH1 *h = dynamic_cast<TH1*>(f->Get(histNames[i].c_str()));
@@ -640,8 +654,8 @@ void fitting_17O_half_dets_minuit() {
 
     std::cout << "Fitting " << histNames[i] << " ...\n";
     // automatic initial amplitudes estimated inside fit function, so just pass peakPositions
-    //fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17O/minuit/fit_results_all_single.txt", true);
-    fitHistogramLikelihoodTMinuitFreePos(h, peakSets[i], &allFits, "plots_17O/minuit/fit_results_all_single_freePos0.txt", true);
+    fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17F/minuit/fit_results_all_single.txt", true);
+    //fitHistogramLikelihoodTMinuitFreePos(h, peakSets[i], &allFits, "plots_17F/minuit/fit_results_all_single_freePos.txt", true);
   }
 
   f->Close();
