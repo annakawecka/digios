@@ -50,7 +50,7 @@ std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indic
   return combinations;
 }
 
-void poster_angular_dist_17F_half_dets_Excorr() {
+void poster_angular_dist_17O_half_dets_Excorr() {
 
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, integral_unc;
 
@@ -89,7 +89,7 @@ void poster_angular_dist_17F_half_dets_Excorr() {
     //{34.02, 35.74, 1.72, 34.88, 0.9831, 5.64157 * 4./3.} //11 - I don't trust this too much
   };
 
-   std::vector<std::vector<double>> ex1982_half_dets = {
+  std::vector<std::vector<double>> ex1982_half_dets = {
     {8.00 , 14.62, 6.62, 11.31, 1.2983, 28.3942}, // 2
     {14.86, 18.56, 3.70, 16.71, 1.0635, 17.1773}, // 3
     {19.89, 22.62, 2.73, 21.26, 0.9886, 16.2642}, // 4
@@ -102,12 +102,34 @@ void poster_angular_dist_17F_half_dets_Excorr() {
     {37.00, 38.53, 1.53, 37.77, 0.9362, 2.11812 * 4./3.}, //11
   };
 
+  std::vector<std::vector<double>> ex3920_half_dets = {
+    { 8.00, 14.08, 6.08, 11.04, 1.1643, 26.7301}, // 4
+    {14.33, 18.32, 4.00, 16.33, 1.1236, 22.9592}, // 5
+    {19.72, 22.59, 2.87, 21.15, 1.0362, 14.8715}, // 6 // from automatic fitting it was 13.9381, from manual fitting 14.871480
+    {22.73, 25.23, 2.50, 23.98, 1.0159, 15.9390}, // 7 // from automatic fitting it was 14.6462, from manual 15.938928
+    {26.26, 28.44, 2.18, 27.35, 1.0007, 9.23547 * 4./3.}, // 8 // from automatic fitting it was 8.40969, from manual 
+    {28.55, 30.56, 2.02, 29.56, 0.9950, 9.04759 * 4./3.}, // 9 // automatic fitting looked ok
+    {31.36, 33.22, 1.85, 32.29, 0.9899, 7.46738 * 4./3.}, //10 // not to be super trusted
+    {33.31, 35.07, 1.76, 34.19, 0.9877, 6.32486 * 4./3.}, //11 // not to be super trusted
+  };
+
+  std::vector<std::vector<double>> ex3552_3630_half_dets = {
+    {10.92, 16.29, 5.37, 13.60, 1.2636, 63.0214 + 7.39285}, // 4
+    {16.49, 19.92, 3.42, 18.20, 1.0694, 66.6946}, // 5
+    {21.17, 23.83, 2.66, 22.50, 1.0161, 48.6652}, // 6 // from automatic fitting 49.5023, from manual 
+    {23.96, 26.31, 2.35, 25.14, 0.9992, 37.9169}, // 7
+    {27.29, 29.38, 2.08, 28.33, 0.9889, 20.050 * 4./3.}, // 8
+    {29.48, 31.42, 1.94, 30.45, 0.9840, 15.5393 * 4./3.}, // 9
+    {32.20, 33.99, 1.80, 33.09, 0.9803, 8.8607956 * 4./3.}, //10 // not to be super trusted, from automatic fitting 11.5826, from manual 8.8607956
+    //{34.08, 35.79, 1.70, 34.94, 0.9760,  * 4./3.}, //11 // not to be super trusted
+  };
+
   std::vector<std::vector<std::vector<double>>> data;
   std::vector<double> Ex_values;
   std::vector<std::vector<TString>> labels;
 
-  data = {ex3061_half_dets, ex4964_half_dets, ex4652_4753_half_dets};
-  Ex_values = {3.061, 4.964, 4.652};
+  data = {ex1982_half_dets, ex3920_half_dets, ex3552_3630_half_dets};
+  Ex_values = {1.982, 3.920, 3.552};
   labels = {
     {"\\ell = 0", "\\ell = 2", "\\ell = 3", "\\ell = 4"},
     {"\\ell = 0", "\\ell = 2", "\\ell = 3", "\\ell = 4"},
@@ -120,8 +142,8 @@ void poster_angular_dist_17F_half_dets_Excorr() {
 
   const auto& pot = potentials[0];
 
-  TString filename = Form("DWBA_17F_%s.root", pot.Data());
-  TString outputDir = Form("plots_17F/minuit_Excorr/ang_dist/%s", pot.Data());
+  TString filename = Form("DWBA_17O_%s.root", pot.Data());
+  TString outputDir = Form("plots_17O/minuit_Excorr/ang_dist/%s", pot.Data());
   gSystem->mkdir(outputDir, kTRUE);
   
   if (checking_gs) {
@@ -160,14 +182,14 @@ void poster_angular_dist_17F_half_dets_Excorr() {
   std::cout << "Mappings " << std::endl;
   
   fitMappings = {
-    {ex3061_half_dets, {9, 10}},//, 11, 12}},
-    {ex4964_half_dets, {4, 5}},//, 11, 12}},
-    {ex4652_4753_half_dets, {14}}//, 11, 12}},
+    {ex1982_half_dets, {0, 2}},//, 11, 12}},
+    {ex3920_half_dets, {13, 15}},
+    {ex3552_3630_half_dets, {10}},
   };
   fitPairs =  {
-    {{9, 10}},
-    {{4, 5}},
-    {{14}},
+    {{0, 2}},
+    {{13, 15}},
+    {{10}},
   };
 
   std::vector<int> color = { 1, 629, 596, 418, 801, 905, 8, 9};
@@ -175,7 +197,7 @@ void poster_angular_dist_17F_half_dets_Excorr() {
 
   std::ofstream resultFile;
 
-  TString outputFilename = Form("%s/DWBA_fit_results_17F.txt", outputDir.Data());
+  TString outputFilename = Form("%s/DWBA_fit_results_17O.txt", outputDir.Data());
   resultFile.open(outputFilename);
 
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
@@ -323,7 +345,7 @@ void poster_angular_dist_17F_half_dets_Excorr() {
 
     legend->Draw();
 
-    TString outputFilename = Form("%s/fit_Ex_%lu_2.png", outputDir.Data(), mappingIndex + 1);
+    TString outputFilename = Form("%s/fit_Ex_%lu.png", outputDir.Data(), mappingIndex + 1);
     canvas->SaveAs(outputFilename);
   }
   
