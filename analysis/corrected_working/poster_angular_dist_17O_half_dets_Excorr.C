@@ -15,9 +15,13 @@ int nr_of_functions = 0;
 int functions_ids[10] = {0,0,0,0,0,0,0,0,0,0};
 
 std::vector<TString> potentials = {
-  "AV", "HV", "HM", "HG", "HP", "BK", "BV", "BM", "BG", "BP",
-  "DK", "DV", "DM", "DG", "DP", "QK", "QV", "QM", "QG", "QP",
-  "ZK", "ZV", "ZM", "ZG", "ZP"
+  "AK", "AV", "AM", "AG", "AP",
+  "HK", "HV", "HM", "HG", "HP",
+  "BK", "BV", "BM", "BG", "BP",
+  "DK", "DV", "DM", "DG", "DP",
+  "QK", "QV", "QM", "QG", "QP",
+  "ZK", "ZV", "ZM", "ZG", "ZP",
+  "LK", "LV", "LM", "LG", "LP"
 };
 
 bool checking_gs = false;
@@ -184,12 +188,12 @@ void poster_angular_dist_17O_half_dets_Excorr() {
   fitMappings = {
     {ex1982_half_dets, {0, 2}},//, 11, 12}},
     {ex3920_half_dets, {13, 15}},
-    {ex3552_3630_half_dets, {10}},
+    {ex3552_3630_half_dets, {6}},
   };
   fitPairs =  {
     {{0, 2}},
     {{13, 15}},
-    {{10}},
+    {{6}},
   };
 
   std::vector<int> color = { 1, 629, 596, 418, 801, 905, 8, 9};
@@ -245,6 +249,8 @@ void poster_angular_dist_17O_half_dets_Excorr() {
 
     experimentGraph->GetHistogram()->GetXaxis()->SetRangeUser(0, 60);
     experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(.01, 100);
+    if (mappingIndex == 2)
+      experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(.4, 120);
 
     TAxis *axis = experimentGraph->GetXaxis();
     axis->SetLimits(0.,60.);
@@ -279,18 +285,6 @@ void poster_angular_dist_17O_half_dets_Excorr() {
     legend->SetBorderSize(0);
     legend->SetFillColor(0); 
 
-    /*for (size_t j = 0; j < fitIndices.size(); ++j) {
-      int fitIndex = fitIndices[j];
-      TGraph* fitGraph = graphsDWBA[fitIndex];
-      fitGraph->SetLineColor(color[ncolor]);
-      fitGraph->SetLineWidth(4);
-      fitGraph->Draw("L");
-
-      ncolor++;
-
-      legend->AddEntry(fitGraph, Form("%s", labels[mappingIndex][j].Data()), "l");
-      }*/
-
     for (const auto& subset : fitPairs[mappingIndex]) {
       //TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
       TF1* fitFunction = new TF1(Form("fitFunction_%lu", subset.size()), combinedDWBA, 0, 60, subset.size());
@@ -306,11 +300,42 @@ void poster_angular_dist_17O_half_dets_Excorr() {
 
       TFitResultPtr fitResult = experimentGraph->Fit(fitFunction, "RLS0");
 
+      double chi2 = 1000000.;
+
+      if (fitResult->IsValid()) {
+	chi2 = fitResult->Chi2();
+      }
+      else {
+	std::cout << "Invalid fit " << std::endl;
+      }
+
       fitFunction->SetLineColor(color[ncolor]);
       fitFunction->SetLineWidth(4);
       fitFunction->Draw("L SAME");
 
       legend->AddEntry(fitFunction, "Total fit", "l");
+
+      resultFile << "========================= Fit for Ex = " << Ex_values[mappingIndex] << " MeV =========================" << std::endl;
+      resultFile << "Fitted Function Indices: ";
+      for (const auto& element : subset) {
+	resultFile << element << " ";
+      }
+      resultFile << std::endl;
+
+      resultFile << "Function Names: "  << std::endl;
+      for (const auto& element : subset) {
+	resultFile << graphsDWBA[element]->GetName() << std::endl;
+      }
+      resultFile << std::endl;
+
+      resultFile << "Fit Parameters: ";
+      for (int i = 0; i < fitFunction->GetNpar(); ++i) {
+	resultFile << fitFunction->GetParameter(i) << " (" << fitFunction->GetParError(i) << ") ";
+      }
+      resultFile << std::endl;
+
+      resultFile << "Chi2 (from TF1): " << chi2 << std::endl;
+      resultFile << "------------------------------------------------------------" << std::endl << std::endl;
 
       for (size_t comp = 0; comp < subset.size(); ++comp) {
 	TF1* compFunc = new TF1(Form("fitComponent_%lu_%lu", mappingIndex, comp),
