@@ -7,13 +7,12 @@ std::string folderName = "plots_" + isotope + "/";
 
 TString rdtCutFile = "rdtCuts_" + isotope + ".root";
 TString rdtCutFileDiff = "rdtCuts_17F_with_17O_recoils.root";
-TString saveFileHists = "rings_" + isotope + ".root";
-TString saveFileHistsHalfDets = "rings_" + isotope + "_half_dets.root";
-TString saveFileHistsStrictTC = "rings_" + isotope + "_200bins_strict_tc.root";
-TString saveFileHistsSingle = "rings_" + isotope + "_single_dets.root";
-TString saveExHistsFile = "ex_hists_" + isotope + ".root";
-TString saveFileHists17Orecoils = "rings_17Fw17Orecoils.root";
-TString saveFileHistsHalfDets17Orecoils = "rings_17Fw17Orecoils_half_dets.root";
+TString saveFileHists = "rings_" + isotope + "_corrEx.root";
+TString saveFileHistsHalfDets = "rings_" + isotope + "_half_dets_corrEx.root";
+TString saveFileHistsSingle = "rings_" + isotope + "_single_dets_corrEx.root";
+TString saveExHistsFile = "ex_hists_" + isotope + "_corrEx.root";
+TString saveFileHists17Orecoils = "rings_17Fw17Orecoils_corrEx.root";
+TString saveFileHistsHalfDets17Orecoils = "rings_17Fw17Orecoils_half_dets_corrEx.root";
 
 TObjArray * cutList;
 TObjArray * cutListDiff;
@@ -66,7 +65,7 @@ int countIn[24];
 
 std::ifstream file;
 
-void analysis(){
+void analysis_fixingEx(){
   //================================= coinTime fit parameters
 
   std::vector<std::vector<double>> fitParams;
@@ -264,7 +263,7 @@ void analysis(){
     histName.Form("Ex_d%d", i);
     Ex_d.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_17Orecoil", i);
-    Ex_d_17Fw17Orecoil.push_back(new TH1F(histName, histName, 200, -2, 12));
+    Ex_d_17Fw17Orecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_strict_tc", i);
     Ex_d_strict_tc.push_back(new TH1F(histName, histName, 200, -2, 12));
   }
@@ -371,6 +370,22 @@ void analysis(){
     if (detID == 0)
       Ex = Ex + 1.22921;
 
+    if (detID == 13) {
+      Ex = Ex * 1.05429255;
+    }
+    if (detID == 15) {
+      Ex = Ex * 0.975;
+    }
+    if (detID == 17) {
+      Ex = Ex + 0.12693;
+    }
+    if (detID == 19) {
+      Ex = Ex * 1.02528994;
+    }
+    if (detID == 22) {
+      Ex = Ex - 0.06793;
+    }
+
     EZ_nogates->Fill(z[detID], e[detID]);
 
     if (coinTimeCorr > -20 && coinTimeCorr < 15) {
@@ -409,8 +424,8 @@ void analysis(){
     if (xgate && rdtgate) {
       correctedCoinTimeXgateRDTCoin[detID]->Fill(coinTimeCorr);
 
-      //if (cointimegate && !(detID == 0)) {
       if (cointimegate) {
+	
 	x_rdt_coinTime_gatedEx->Fill(Ex);
 
 	Ex_d[detID % 6]->Fill(Ex);
@@ -446,18 +461,23 @@ void analysis(){
 	}
       }
 
-      if (strict_cointimegate && !(detID == 0))
-	Ex_d_strict_tc[detID % 6]->Fill(Ex);
-
-      if (cointimegate_2turns && !(detID == 0))
-	EZ_gated_2turns->Fill(z[detID], e[detID]);
-
-      if (cointimegate_3turns && !(detID == 0))
-	EZ_gated_3turns->Fill(z[detID], e[detID]);
     }
 
-    if (xgate && diffrdtgate && cointimegate) {
+
+    if (xgate && diffrdtgate && cointimegate && !oxygen) {
       x_diffrdt_coinTime_gatedEx->Fill(Ex);
+
+      Ex_d_17Fw17Orecoils[detID % 6]->Fill(Ex);
+
+      for (size_t ii = 0; ii < pos_half.size(); ii++) {
+	double z_start = pos_half[ii] - 25.;
+	double z_end = (ii + 1 < pos_half.size()) ? pos_half[ii] : -220.;
+
+	if (z[detID] >= z_start && z[detID] < z_end) {
+	  Ex_d_half_dets_17Fw17Orecoils[ii]->Fill(Ex);
+	  break;
+	}
+      }
     }
 
     Ex_nogates->Fill(Ex);
@@ -485,13 +505,6 @@ void analysis(){
 
   outputFileHalfDets->Close();
 
-  TFile* outputFileStrictTC = new TFile(saveFileHistsStrictTC, "RECREATE");
-
-  for (int ii = 0; ii < 6; ++ii)
-    Ex_d_strict_tc[ii]->Write();
-
-  outputFileStrictTC->Close();
-
    TFile* outputFileSingle = new TFile(saveFileHistsSingle, "RECREATE");
 
   for (int ii = 0; ii < 24; ++ii)
@@ -499,151 +512,19 @@ void analysis(){
 
   outputFileSingle->Close();
 
+  if (!oxygen) {
+    TFile* outputFile17Orecoils = new TFile(saveFileHists17Orecoils, "RECREATE");
 
-  //================================= fitting 17O
-  if (fitting) {
+    for (int ii = 0; ii < 6; ++ii)
+      Ex_d_17Fw17Orecoils[ii]->Write();
 
-    printf("Start of fitting\n");
+    outputFile17Orecoils->Close();
 
-    TCanvas *cExdet = new TCanvas("cExdet", "Ex for different detector rings", 1000, 800);
-    cExdet->Divide(3, 2);
+    TFile* outputFileHalfDets17Orecoils = new TFile(saveFileHistsHalfDets17Orecoils, "RECREATE");
 
-    for (int i = 0; i < 6; ++i) {
-      cExdet->cd(i + 1);
-      Ex_d[i]->Draw();
-    }
+    for (int ii = 0; ii < 12; ++ii)
+      Ex_d_half_dets_17Fw17Orecoils[ii]->Write();
 
-    cExdet->SaveAs((folderName + "/Ex_for_rings.png").c_str());
-
-    //for (int detectorId = 0; detectorId <= 5; detectorId++) {
-    //  fitSpectra(Ex_d[detectorId], detectorId);
-    //} // the 'real' fitting part is done in a separate root script
-    
+    outputFileHalfDets17Orecoils->Close();
   }
-
-  //================================= plotting and saving histograms
-
-  if (plothist)  {
-
-    TCanvas *cAllDetectors = new TCanvas("cAllDetectors", "Corrected CoinTime for All Detectors", 1200, 800);
-    cAllDetectors->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cAllDetectors->cd(i + 1);
-      correctedCoinTime[i]->Draw();
-    }
-
-    cAllDetectors->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors.png").c_str());
-
-    TCanvas *cAllDetectorsXgate = new TCanvas("cAllDetectorsXgate", "Corrected CoinTime for All Detectors with x gate", 1200, 800);
-    cAllDetectorsXgate->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cAllDetectorsXgate->cd(i + 1);
-      correctedCoinTimeXgate[i]->Draw();
-    }
-
-    cAllDetectorsXgate->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_Xgate.png").c_str());
-
-    TCanvas *cAllDetectorsRDT = new TCanvas("cAllDetectorsRDT", "Corrected CoinTime for All Detectors (RDT coin)", 1200, 800);
-    cAllDetectorsRDT->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cAllDetectorsRDT->cd(i + 1);
-      correctedCoinTimeRDTCoin[i]->Draw();
-    }
-
-    cAllDetectorsRDT->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_RDTCoin.png").c_str());
-
-    TCanvas *cAllDetectorsXgateRDT = new TCanvas("cAllDetectorsXgateRDT", "Corrected CoinTime for All Detectors (RDT coin && x gate)", 1200, 800);
-    cAllDetectorsXgateRDT->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cAllDetectorsXgateRDT->cd(i + 1);
-      correctedCoinTimeXgateRDTCoin[i]->Draw();
-    }
-
-    cAllDetectorsRDT->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_XgateRDTCoin.png").c_str());
-
-    std::cout << "coin: " << n_coin << " coin_rdt: " << n_coin_rdt << std::endl;
-
-    TCanvas *cRDT = new TCanvas("cRDT", "RDT dE-E gated", 1200, 300);
-    cRDT->Divide(4);
-
-    for (int i = 0; i < 4; ++i) {
-      cRDT->cd(i + 1);
-      recoilDEE[i]->Draw();
-    }
-
-    cRDT->SaveAs((folderName + "/RDT_DEE_gated.png").c_str());
-
-    TH1F *combinedHist = (TH1F*)correctedCoinTimeXgateRDTCoin[0]->Clone("combinedHist");
-    combinedHist->Reset();
-    for (int i = 0; i < numDet; ++i) {
-      combinedHist->Add(correctedCoinTimeXgateRDTCoin[i]);
-    }
-
-    TCanvas *cCombined = new TCanvas("cCombined", "Combined Corrected CoinTime with recoil && x gate", 800, 600);
-    combinedHist->Draw();
-    cCombined->SaveAs((folderName + "/Combined_Corrected_CoinTime_XgateRDTCoin.png").c_str());
-
-    TCanvas *cGatedEx = new TCanvas("cGatedEx", "Ex gated on x, recoils and coinTime", 800, 600);
-    x_rdt_coinTime_gatedEx->Draw();
-    //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
-    x_rdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.root").c_str());
-
-    TCanvas *cGatedExDiffRdt = new TCanvas("cGatedExDiffRdt", "Ex gated on x, recoils and coinTime, diff rdt", 800, 600);
-    x_diffrdt_coinTime_gatedEx->Draw();
-    //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
-    x_diffrdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_diffrecoil_coinTime_gated.root").c_str());
-
-    TCanvas *cRDTCoinTimeGatedEx = new TCanvas("cRDTCoinTimeGatedEx", "Ex gated on recoils and coinTime", 800, 600);
-    rdt_coinTime_gatedEx->Draw();
-    cRDTCoinTimeGatedEx->SaveAs((folderName + "/Ex_recoil_coinTime_gated.png").c_str());
-
-    TCanvas *cCoinTimeGatedEx = new TCanvas("cCoinTimeGatedEx", "Ex gated on coinTime", 800, 600);
-    coinTime_gatedEx->Draw();
-    cCoinTimeGatedEx->SaveAs((folderName + "/Ex_coinTime_gated.png").c_str());
-
-    TCanvas *cRDTGatedEx = new TCanvas("cRDTGatedEx", "Ex gated on rdt", 800, 600);
-    rdt_gatedEx->Draw();
-    cRDTGatedEx->SaveAs((folderName + "/Ex_rdt_gated.png").c_str());
-
-    TCanvas *cExnogates = new TCanvas("cExnogates", "Ex, no gates", 800, 600);
-    Ex_nogates->Draw();
-    cExnogates->SaveAs((folderName + "/Ex_nogates.png").c_str());
-
-    TCanvas *cEZnogates = new TCanvas("cEZnogates", "e vs z, no gates", 800, 600);
-    EZ_nogates->Draw();
-    cEZnogates->SaveAs((folderName + "/EZ_nogates.png").c_str());
-
-    gStyle->SetOptStat(000);
-
-    TCanvas *cEZgated = new TCanvas("cEZgated", "e vs z, gated", 800, 600);
-    EZ_gated->Draw();
-    cEZgated->SaveAs((folderName + "/EZ_gated.png").c_str());
-
-    TCanvas *cEZgatedNo0 = new TCanvas("cEZgatedNo0", "e vs z, gated", 800, 600);
-    EZ_gated_without0->Draw();
-    cEZgatedNo0->SaveAs((folderName + "/EZ_gated_without_det0.png").c_str());
-
-    TCanvas *cEZgated2turns = new TCanvas("cEZgated2turns", "e vs z, gated, 2 turns", 800, 600);
-    EZ_gated_2turns->Draw();
-    cEZgated2turns->SaveAs((folderName + "/EZ_gated_2turns.png").c_str());
-
-    TCanvas *cEZgated3turns = new TCanvas("cEZgated3turns", "e vs z, gated, 3 turns", 800, 600);
-    EZ_gated_3turns->Draw();
-    cEZgated3turns->SaveAs((folderName + "/EZ_gated_3turns.png").c_str());
-
-    TCanvas *cExSingleDets = new TCanvas("cExSingleDets", "Ex for each detector", 1200, 800);
-    cExSingleDets->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cExSingleDets->cd(i + 1);
-      Ex_single[i]->Draw();
-    }
-
-    cExSingleDets->SaveAs((folderName + "/Ex_each_detector.png").c_str());
-  }
-
 }

@@ -129,9 +129,10 @@ void plot_ex_diff_recoils() {
 
   TLatex latex;
   latex.SetNDC();
-  latex.SetTextSize(0.04);
+  latex.SetTextSize(0.05);
   latex.SetTextFont(42);          // 42 = Helvetica, 62 = bold Helvetica
   latex.SetTextColor(kRed);
+  latex.SetTextColorAlpha(kGray+2, 0.4);
   latex.DrawLatex(0.7, 0.4, "PRELIMINARY");
 
   leg->AddEntry(vline, "S_{p} of 18F = 5.61 MeV", "l"); // "l" = linia

@@ -406,7 +406,7 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
   minuit.mnparm(1, "BG_slope",      0.0, 0.01, 0., 0.01, ierflg);
 
   // sigma0, sigma1: choose reasonable limits so sigma near expected [0.075, 0.1]
-  minuit.mnparm(2, "Sigma0", 0.085, 0.001, 0.07, 0.1, ierflg);    // intercept
+  minuit.mnparm(2, "Sigma0", 0.085, 0.001, 0.07, 0.1, ierflg);    // intercept, was :  0.085, 0.001, 0.07, 0.1, ierflg); 
   minuit.mnparm(3, "Sigma1", 0.0,   0.001, 0.0, 0.05, ierflg);  // slope (per unit x offset)
 
   // common group position (pos0)
@@ -457,6 +457,7 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
     minuit.mnpout(i, parName, val, err, bnd1, bnd2, ivarbl);
     out << parName << " = " << val << " ± " << err << "\n";
   }
+  for (int i = 0; i < gNpeaks; ++i) out << Form("Pos%d = %.4g (%.4g)\n", i+1, parVal[4] + gDeltas[i], peakPositions[i]);
   out << "\n";
   out.close();
 
@@ -513,17 +514,20 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
   pt->AddText(Form("Sigma1 = %.4g +- %.4g", parVal[3], parErr[3]));
   pt->AddText(Form("Pos0   = %.4g +- %.4g", parVal[4], parErr[4]));
   for (int i = 0; i < gNpeaks; ++i) pt->AddText(Form("Area%d = %.4g +- %.4g", i+1, parVal[5+i], parErr[5+i]));
+  for (int i = 0; i < gNpeaks; ++i) pt->AddText(Form("Pos%d = %.4g", i+1, parVal[4] + gDeltas[i]));
   pt->Draw();
 
   if (savePlot) {
-    c->SaveAs(Form("plots_17F/minuit/fit_%s.png", hist->GetName())); // PNGs
+    c->SaveAs(Form("plots_17F/minuit_Excorr_smallerSigma/fit_%s.png", hist->GetName())); // PNGs
+    //c->SaveAs(Form("plots_17F/minuit/fit_%s.png", hist->GetName())); // PNGs
     if (outRootFile && outRootFile->IsOpen()) {
       outRootFile->cd();
       c->Write();
     }
   }
 
-  std::ofstream outFile("plots_17F/minuit/fit_results_single.txt", std::ios::app);  // Append mode
+  std::ofstream outFile("plots_17F/minuit_Excorr_smallerSigma/fit_results.txt", std::ios::app);  // Append mode
+  //std::ofstream outFile("plots_17F/minuit/fit_results.txt", std::ios::app);  // Append mode
 
   outFile << "Fit results for histogram: " << hist->GetName() << "\n";
 
@@ -536,6 +540,7 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
 
     outFile << Form("%-15s = %.6g ± %.6g\n", parName.Data(), val, err);
   }
+  for (int i = 0; i < gNpeaks; ++i) outFile << Form("Pos%d = %.4g (%.4g)\n", i+1, parVal[4] + gDeltas[i], peakPositions[i]);
 
   outFile << "Fit status code: " << fitStatusCode << "\n";
   outFile << "Fit status message: " << fitStatusStr << "\n";
@@ -551,7 +556,8 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
 void fitting_17F_half_dets_minuit() {
 
   // fitting rings
-  TFile *f = TFile::Open("rings_17F_half_dets.root", "READ");
+  TFile *f = TFile::Open("rings_17F_half_dets_corrEx.root", "READ");
+  //TFile *f = TFile::Open("rings_17F_half_dets.root", "READ");
   if (!f || f->IsZombie()) { std::cerr << "Cannot open file\n"; return; }
 
   std::vector<std::string> histNames = {"Ex_d0_half_dets", "Ex_d1_half_dets", "Ex_d2_half_dets", "Ex_d3_half_dets", "Ex_d4_half_dets", "Ex_d5_half_dets",
@@ -580,11 +586,11 @@ void fitting_17F_half_dets_minuit() {
     {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
     {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
     {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
-    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
-    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
-    {0.0, 0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
     {0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
-    {0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976}
+    {0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {0.9372, 1.04155, 1.12136, 1.4, 1.6, 1.9, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {1.12136, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976},
+    {1.12136, 1.70081, 2.52335, 3.06184, 3.3582, 3.72419, 3.83917, 4.1159, 4.36015, 4.652, 4.753, 4.9636, 5.2976}
   };
 
   // fitting individual detectors
@@ -645,7 +651,8 @@ void fitting_17F_half_dets_minuit() {
     {1.98207, 3.55484, 3.63376, 3.92044, 5.2548},//, 6.19822, 7.1169}
     };*/
 
-  TFile allFits("plots_17F/minuit/all_fits_single_dets.root", "RECREATE");
+  TFile allFits("plots_17F/minuit_Excorr_smallerSigma/all_fits.root", "RECREATE");
+  //TFile allFits("plots_17F/minuit/all_fits.root", "RECREATE");
   //TFile allFits("plots_17F/minuit/all_fits_single_dets_freePos.root", "RECREATE");
 
   for (size_t i = 0; i < histNames.size(); ++i) {
@@ -654,7 +661,8 @@ void fitting_17F_half_dets_minuit() {
 
     std::cout << "Fitting " << histNames[i] << " ...\n";
     // automatic initial amplitudes estimated inside fit function, so just pass peakPositions
-    fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17F/minuit/fit_results_all_single.txt", true);
+    fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17F/minuit_Excorr_smallerSigma/fit_results_all.txt", true);
+    //fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17F/minuit/fit_results_all.txt", true);
     //fitHistogramLikelihoodTMinuitFreePos(h, peakSets[i], &allFits, "plots_17F/minuit/fit_results_all_single_freePos.txt", true);
   }
 
