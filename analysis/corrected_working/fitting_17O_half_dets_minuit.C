@@ -321,14 +321,14 @@ void fitHistogramLikelihoodTMinuitFreePos(TH1* hist,
   pt->Draw();
 
   if (savePlot) {
-    c->SaveAs(Form("plots_17O/minuit_Excorr_extra5/fit_%s_free.png", hist->GetName())); // PNGs
+    c->SaveAs(Form("plots_17O/minuit_extra5/fit_%s_free.png", hist->GetName())); // PNGs
     if (outRootFile && outRootFile->IsOpen()) {
       outRootFile->cd();
       c->Write();
     }
   }
 
-  std::ofstream outFile("plots_17O/minuit_Excorr_extra5/fit_results_single_freePos.txt", std::ios::app);  // Append mode
+  std::ofstream outFile("plots_17O/minuit_extra5/fit_results_single_freePos.txt", std::ios::app);  // Append mode
 
   outFile << "Fit results for histogram: " << hist->GetName() << "\n";
 
@@ -516,14 +516,14 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
   pt->Draw();
 
   if (savePlot) {
-    c->SaveAs(Form("plots_17O/minuit_Excorr_extra5/fit_%s_ring.png", hist->GetName())); // PNGs
+    c->SaveAs(Form("plots_17O/minuit_extra5/fit_%s_ring.png", hist->GetName())); // PNGs
     if (outRootFile && outRootFile->IsOpen()) {
       outRootFile->cd();
       c->Write();
     }
   }
 
-  std::ofstream outFile("plots_17O/minuit_Excorr_extra5/fit_results_ring.txt", std::ios::app);  // Append mode
+  std::ofstream outFile("plots_17O/minuit_extra5/fit_results_ring.txt", std::ios::app);  // Append mode
 
   outFile << "Fit results for histogram: " << hist->GetName() << "\n";
 
@@ -552,7 +552,8 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
 void fitting_17O_half_dets_minuit() {
 
   // fitting rings
-  TFile *f = TFile::Open("rings_17O_half_dets_corrEx.root", "READ");
+  //TFile *f = TFile::Open("rings_17O_half_dets_corrEx.root", "READ");
+  TFile *f = TFile::Open("rings_17O_half_dets.root", "READ");
   if (!f || f->IsZombie()) { std::cerr << "Cannot open file\n"; return; }
 
   std::vector<std::string> histNames = {"Ex_d0_half_dets", "Ex_d1_half_dets", "Ex_d2_half_dets", "Ex_d3_half_dets", "Ex_d4_half_dets", "Ex_d5_half_dets",
@@ -567,11 +568,11 @@ void fitting_17O_half_dets_minuit() {
     {0.0, 1.982, 3.552, 3.63, 3.92},
     {0.0, 1.982, 3.552, 3.63, 3.92},
     {0.0, 1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375},
-    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2},
-    {1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2, 7.11},
-    {1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2, 7.11},
-    {1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2, 7.11},
-    {1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2, 7.11}
+    {0.0, 1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2},  // 7
+    {1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2, 6.93, 7.3}, // 8
+    {1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2, 6.93, 7.3}, // 9
+    {1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2, 6.93, 7.3}, // 10
+    {1.982, 3.552, 3.63, 3.92, 5.255, 5.340, 5.375, 6.2, 6.93, 7.3}  // 11
     };
 
   // fitting individual detectors
@@ -633,7 +634,7 @@ void fitting_17O_half_dets_minuit() {
     };
   */
 
-  TFile allFits("plots_17O/minuit_Excorr_extra5/all_fits.root", "RECREATE");
+  TFile allFits("plots_17O/minuit_extra5/all_fits.root", "RECREATE");
   //TFile allFits("plots_17O/minuit_Excorr/all_fits_single_dets.root", "RECREATE");
   //TFile allFits("plots_17O/minuit/all_fits_single_dets_freePos.root", "RECREATE");
 
@@ -644,7 +645,7 @@ void fitting_17O_half_dets_minuit() {
     std::cout << "Fitting " << histNames[i] << " ...\n";
     // automatic initial amplitudes estimated inside fit function, so just pass peakPositions
     //fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17O/minuit_Excorr/fit_results_all_single.txt", true);
-    fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17O/minuit_Excorr_extra5/fit_results_all.txt", true);
+    fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17O/minuit_extra5/fit_results_all.txt", true);
     //fitHistogramLikelihoodTMinuitFreePos(h, peakSets[i], &allFits, "plots_17O/minuit/fit_results_all_single_freePos0.txt", true);
   }
 
