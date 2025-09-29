@@ -54,7 +54,7 @@ std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indic
   return combinations;
 }
 
-void poster_angular_dist_17O_half_dets() {
+void poster_angular_dist_17F_half_dets() {
 
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, integral_unc;
 
@@ -70,7 +70,7 @@ void poster_angular_dist_17O_half_dets() {
     {34.95, 36.50, 1.55, 35.73, 0.9032, (0.449797 + 0.000258 + 2.93755) * 4./3.}, // 8
     {36.58, 38.07, 1.49, 37.32, 0.9044, (0.568829 + 0.01185 + 3.00139) * 4./3.}, // 9
     {38.67, 40.09, 1.42, 39.38, 0.9023, (3.15072) * 4./3.}, //10
-    {40.17, 41.54, 1.38, 40.85, 0.8996, (0.677276) * 4./3.}, //11
+    {40.17, 41.54, 1.38, 40.85, 0.8996, (0.677276) * 4./3.} //11
   };
 
   std::vector<std::vector<double>> ex3061_half_dets = {
@@ -83,10 +83,10 @@ void poster_angular_dist_17O_half_dets() {
     {31.05, 32.85, 1.80, 31.95,  0.9512,  1.07583 * 4./3.}, // 8
     {32.94, 34.65, 1.70, 33.80,  0.9476,  1.91486 * 4./3.}, // 9
     {35.33, 36.94, 1.61, 36.14,  0.9473,  0.76595 * 4./3.}, //10
-    {37.02, 38.56, 1.54, 37.79,  0.9428,  1.63772 * 4./3.}, //11
+    {37.02, 38.56, 1.54, 37.79,  0.9428,  1.63772 * 4./3.} //11
   };
 
-  std::vector<std::vector<double>> ex3741_3839_half_dets = { // 3.79
+  std::vector<std::vector<double>> ex3724_3839_half_dets = { // 3.79
     { 8.20, 14.74, 6.54, 11.47, 1.3005,  (0.487773 + 20.1041)}, // 3
     {16.54, 19.92, 3.38, 18.23, 1.0572,  (1.75304 + 3.55357)}, // 4
     {20.08, 22.84, 2.77, 21.46, 1.0117,  (3.2814 + 1.80978)}, // 5
@@ -95,7 +95,7 @@ void poster_angular_dist_17O_half_dets() {
     {29.38, 31.31, 1.92, 30.35, 0.9716,  (0. + 3.77986) * 4./3.}, // 8
     {31.41, 33.22, 1.81, 32.31, 0.9682,  (0.207111 + 2.60804) * 4./3.}, // 9
     {33.94, 35.63, 1.69, 34.79, 0.9627,  (0.8015 + 2.0848) * 4./3.}, //10
-    {35.72, 37.33, 1.62, 36.53, 0.9619,  (0.753033 + 1.19958) * 4./3.}, //11
+    {35.72, 37.33, 1.62, 36.53, 0.9619,  (0.753033 + 1.19958) * 4./3.} //11
   };
 
   std::vector<std::vector<double>> ex4115_half_dets = {
@@ -106,7 +106,7 @@ void poster_angular_dist_17O_half_dets() {
     {28.58, 30.57, 1.99, 29.57, 0.9808,  3.30765 * 4./3.}, // 8
     {30.67, 32.53, 1.86, 31.60, 0.9763,  3.78165 * 4./3.}, // 9
     {33.27, 35.01, 1.74, 34.14, 0.9739,  3.29471 * 4./3.}, //10
-    {35.10, 36.75, 1.65, 35.92, 0.9695,  3.32874 * 4./3.}, //11
+    {35.10, 36.75, 1.65, 35.92, 0.9695,  3.32874 * 4./3.} //11
   };
 
   std::vector<std::vector<double>> ex4360_half_dets = {
@@ -115,7 +115,7 @@ void poster_angular_dist_17O_half_dets() {
     {22.02, 24.57, 2.55, 23.30, 1.0097,  0.2632}, // 6
     {24.70, 26.99, 2.29, 25.85, 1.0004,  1.25035}, // 7
     {27.95, 29.99, 2.04, 28.97, 0.9885,  0.710929 * 4./3.}, // 8
-    {30.09, 32.00, 1.91, 31.05, 0.9841,  0.807541 * 4./3.}, // 9
+    {30.09, 32.00, 1.91, 31.05, 0.9841,  0.807541 * 4./3.} // 9
   };
 
   /*std::vector<std::vector<double>> ex4652_4753_half_dets = { // theta values for 4.652
@@ -147,27 +147,23 @@ void poster_angular_dist_17O_half_dets() {
     {22.71, 25.23, 2.52, 23.97, 1.0231, 4.8697}, // 7
     {26.27, 28.46, 2.19, 27.36, 1.0074, 3.66391 * 4./3.}, // 8
     {28.57, 30.60, 2.03, 29.58, 1.0016, 2.2864 * 4./3.}, // 9
-    {31.40, 33.26, 1.86, 32.33, 0.9963, 3.12153 * 4./3.} //10 - I don't trust this too much
-    {33.36, 35.12, 1.77, 34.24, 0.9939, 1.73812 * 4./3.}, //11 - I don't trust this too much
+    {31.40, 33.26, 1.86, 32.33, 0.9963, 3.12153 * 4./3.}, //10 - I don't trust this too much
+    {33.36, 35.12, 1.77, 34.24, 0.9939, 1.73812 * 4./3.} //11 - I don't trust this too much
   };
   
   std::vector<std::vector<std::vector<double>>> data;
   std::vector<double> Ex_values;
   std::vector<std::vector<TString>> labels;
 
-  data = {ex1982_half_dets, ex3920_half_dets, ex3552_3630_half_dets, ex5255_5340_5375_half_dets, ex6200_half_dets, ex6930_half_dets};
-  Ex_values = {1.982, 3.920, 3.552, 5.255, 6.200, 6.930, 6.930, 6.930, 6.930, 6.930};
+  data = {ex4964_half_dets, ex3061_half_dets, ex4652_4753_half_dets, ex4360_half_dets, ex4115_half_dets, ex3724_3839_half_dets};
+  Ex_values = {4.964, 3.062, 4.652, 4.360, 4.115, 3.790};
   labels = {
-    {"\\ell = 0", "\\ell = 2", "\\ell = 3", "\\ell = 4"},
-    {"\\ell = 0", "\\ell = 2", "\\ell = 3", "\\ell = 4"},
-    {"\\ell = 2", "\\ell = 2", "\\ell = 3", "\\ell = 4"},
-    {"\\ell = 2", "\\ell = 0", "\\ell = 0", "\\ell = 4"}, // 5255
-    {"\\ell = 1"}, // 6200
-    {"\\ell = 1"}, // 6930, 30
-    {"\\ell = 3"}, // 6930, 31
-    {"\\ell = 2"}, // 6930, 34
-    {"\\ell = 0"}, // 6930, 35
-    {"\\ell = 2", "\\ell = 0"}, // 6930, 34, 35
+    {"\\ell = 0", "\\ell = 2"},
+    {"\\ell = 0", "\\ell = 2"},
+    {"\\ell = 2"},
+    {"\\ell = 2"},
+    {"\\ell = 0", "\\ell = 2"},
+    {"\\ell = 0", "\\ell = 2"},
   };
 
   std::vector<TGraph*> graphs;
@@ -176,8 +172,8 @@ void poster_angular_dist_17O_half_dets() {
 
   const auto& pot = potentials[0];
 
-  TString filename = Form("DWBA_17O_%s.root", pot.Data());
-  TString outputDir = Form("plots_17O/minuit_extra5/ang_dist/%s", pot.Data());
+  TString filename = Form("DWBA_17F_%s.root", pot.Data());
+  TString outputDir = Form("plots_17F/minuit_new/ang_dist/%s", pot.Data());
   gSystem->mkdir(outputDir, kTRUE);
   
   if (checking_gs) {
@@ -216,28 +212,20 @@ void poster_angular_dist_17O_half_dets() {
   std::cout << "Mappings " << std::endl;
   
   fitMappings = {
-    {ex1982_half_dets, {0, 2}},//, 11, 12}},
-    {ex3920_half_dets, {15, 13}},
-    {ex3552_3630_half_dets, {6}},
-    {ex5255_5340_5375_half_dets, {26, 27}},
-    {ex6200_half_dets, {29}},
-    {ex6930_half_dets, {30, 31, 34, 35}},
-    {ex6930_half_dets, {30, 31, 34, 35}},
-    {ex6930_half_dets, {30, 31, 34, 35}},
-    {ex6930_half_dets, {30, 31, 34, 35}},
-    {ex6930_half_dets, {30, 31, 34, 35}}
+    {ex4964_half_dets, {4, 5}},//, 11, 12}},
+    {ex3061_half_dets, {9, 10}},
+    {ex4652_4753_half_dets, {14}},
+    {ex4360_half_dets, {25}},
+    {ex4115_half_dets, {24, 23}},
+    {ex3724_3839_half_dets, {28, 26}},
   };
   fitPairs =  {
-    {{0, 2}},
-    {{15, 13}},
-    {{6}},
-    {{26, 27}},
-    {{29}},
-    {{30}},
-    {{31}},
-    {{34}},
-    {{35}},
-    {{34, 35}}
+    {{4, 5}},
+    {{9, 10}},
+    {{14}},
+    {{25}},
+    {{24, 23}},
+    {{28, 26}}
   };
 
   std::vector<int> color = {629, 596, 418, 801, 905, 8, 9, 1};
@@ -245,7 +233,7 @@ void poster_angular_dist_17O_half_dets() {
 
   std::ofstream resultFile;
 
-  TString outputFilename = Form("%s/DWBA_fit_results_17O.txt", outputDir.Data());
+  TString outputFilename = Form("%s/DWBA_fit_results_17F.txt", outputDir.Data());
   resultFile.open(outputFilename);
 
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {

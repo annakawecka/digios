@@ -321,14 +321,14 @@ void fitHistogramLikelihoodTMinuitFreePos(TH1* hist,
   pt->Draw();
 
   if (savePlot) {
-    c->SaveAs(Form("plots_17Fw17Orecoils/minuit_Excorr/fit_%s_free.png", hist->GetName())); // PNGs
+    c->SaveAs(Form("plots_17Fw17Orecoils/minuit/fit_%s_free.png", hist->GetName())); // PNGs
     if (outRootFile && outRootFile->IsOpen()) {
       outRootFile->cd();
       c->Write();
     }
   }
 
-  std::ofstream outFile("plots_17Fw17Orecoils/minuit_Excorr/fit_results_single_freePos.txt", std::ios::app);  // Append mode
+  std::ofstream outFile("plots_17Fw17Orecoils/minuit/fit_results_single_freePos.txt", std::ios::app);  // Append mode
 
   outFile << "Fit results for histogram: " << hist->GetName() << "\n";
 
@@ -516,14 +516,14 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
   pt->Draw();
 
   if (savePlot) {
-    c->SaveAs(Form("plots_17Fw17Orecoils/minuit_Excorr/fit_%s_ring.png", hist->GetName())); // PNGs
+    c->SaveAs(Form("plots_17Fw17Orecoils/minuit/fit_%s_ring.png", hist->GetName())); // PNGs
     if (outRootFile && outRootFile->IsOpen()) {
       outRootFile->cd();
       c->Write();
     }
   }
 
-  std::ofstream outFile("plots_17Fw17Orecoils/minuit_Excorr/fit_results_ring.txt", std::ios::app);  // Append mode
+  std::ofstream outFile("plots_17Fw17Orecoils/minuit/fit_results_ring.txt", std::ios::app);  // Append mode
 
   outFile << "Fit results for histogram: " << hist->GetName() << "\n";
 
@@ -551,7 +551,7 @@ void fitHistogramLikelihoodTMinuit(TH1* hist,
 // ---------- Example top-level function to demonstrate usage ----------
 void fitting_17Fw17Orecoils_half_dets_minuit() {
 
-  TFile *f = TFile::Open("rings_17Fw17Orecoils_half_dets_corrEx.root", "READ");
+  TFile *f = TFile::Open("rings_17Fw17Orecoils_half_dets.root", "READ");
   if (!f || f->IsZombie()) { std::cerr << "Cannot open file\n"; return; }
 
   std::vector<std::string> histNames = {"Ex_d6_half_dets_17Orecoil", "Ex_d7_half_dets_17Orecoil",
@@ -568,14 +568,14 @@ void fitting_17Fw17Orecoils_half_dets_minuit() {
     };
 
 
-  TFile allFits("plots_17Fw17Orecoils/minuit_Excorr/all_fits.root", "RECREATE");
+  TFile allFits("plots_17Fw17Orecoils/minuit/all_fits.root", "RECREATE");
 
   for (size_t i = 0; i < histNames.size(); ++i) {
     TH1 *h = dynamic_cast<TH1*>(f->Get(histNames[i].c_str()));
     if (!h) { std::cerr << "Histogram " << histNames[i] << " not found\n"; continue; }
 
     std::cout << "Fitting " << histNames[i] << " ...\n";
-    fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17Fw17Orecoils/minuit_Excorr/fit_results_all.txt", true);
+    fitHistogramLikelihoodTMinuit(h, peakSets[i], &allFits, "plots_17Fw17Orecoils/minuit/fit_results_all.txt", true);
   }
 
   f->Close();
