@@ -15,6 +15,11 @@ TString saveExHistsFile = "ex_hists_" + isotope + ".root";
 TString saveFileHists17Orecoils = "rings_17Fw17Orecoils.root";
 TString saveFileHistsHalfDets17Orecoils = "rings_17Fw17Orecoils_half_dets.root";
 
+TString saveFileHistsMoreBins = "rings_" + isotope + "_morebins.root";
+TString saveFileHistsHalfDetsMoreBins = "rings_" + isotope + "_half_dets_morebins.root";
+TString saveFileHists17OrecoilsMoreBins = "rings_17Fw17Orecoils_morebins.root";
+TString saveFileHistsHalfDets17OrecoilsMoreBins = "rings_17Fw17Orecoils_half_dets_morebins.root";
+
 TObjArray * cutList;
 TObjArray * cutListDiff;
 Bool_t isCutFileOpen, isCutFileOpenDiff;
@@ -251,11 +256,15 @@ void analysis(){
   TH1F* x_diffrdt_coinTime_gatedEx = new TH1F("x_diffrdt_coinTime_gatedEx", "Ex gated on x, recoils and coinTime for another recoil cut", 200, -2, 12);
   
   std::vector<TH1F*> Ex_d; // Array to store histograms for Ex_d0, Ex_d1, ..., Ex_d5
+  std::vector<TH1F*> Ex_d_morebins;
   std::vector<TH1F*> Ex_d_half_dets;
+  std::vector<TH1F*> Ex_d_half_dets_morebins;
   std::vector<TH1F*> Ex_d_strict_tc;
   std::vector<TH1F*> Ex_single; // Array to store histograms for Ex for all detectors individually
   std::vector<TH1F*> Ex_d_17Fw17Orecoils; // Array to store histograms for Ex_d0, Ex_d1, ..., Ex_d5
+  std::vector<TH1F*> Ex_d_17Fw17Orecoils_morebins;
   std::vector<TH1F*> Ex_d_half_dets_17Fw17Orecoils;
+  std::vector<TH1F*> Ex_d_half_dets_17Fw17Orecoils_morebins;
   
   printf("Before initialising Ex_d histograms\n");
 
@@ -263,8 +272,12 @@ void analysis(){
     TString histName;
     histName.Form("Ex_d%d", i);
     Ex_d.push_back(new TH1F(histName, histName, 200, -2, 12));
+    histName.Form("Ex_d%d_morebins", i);
+    Ex_d_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
     histName.Form("Ex_d%d_17Orecoil", i);
-    Ex_d_17Fw17Orecoil.push_back(new TH1F(histName, histName, 200, -2, 12));
+    Ex_d_17Fw17Orecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
+    histName.Form("Ex_d%d_17Orecoil_morebins", i);
+    Ex_d_17Fw17Orecoils_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
     histName.Form("Ex_d%d_strict_tc", i);
     Ex_d_strict_tc.push_back(new TH1F(histName, histName, 200, -2, 12));
   }
@@ -275,6 +288,10 @@ void analysis(){
     Ex_d_half_dets.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_half_dets_17Orecoil", i);
     Ex_d_half_dets_17Fw17Orecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
+    histName.Form("Ex_d%d_half_dets_morebins", i);
+    Ex_d_half_dets_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
+    histName.Form("Ex_d%d_half_dets_17Orecoil_morebins", i);
+    Ex_d_half_dets_17Fw17Orecoils_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
   }
 
    printf("After initialising Ex_d histograms\n");
@@ -414,6 +431,7 @@ void analysis(){
 	x_rdt_coinTime_gatedEx->Fill(Ex);
 
 	Ex_d[detID % 6]->Fill(Ex);
+	Ex_d_morebins[detID % 6]->Fill(Ex);
 
 	Ex_single[detID]->Fill(Ex);
 
@@ -441,6 +459,7 @@ void analysis(){
 
 	  if (z[detID] >= z_start && z[detID] < z_end) {
 	    Ex_d_half_dets[ii]->Fill(Ex);
+	    Ex_d_half_dets_morebins[ii]->Fill(Ex);
 	    break;
 	  }
 	}
@@ -458,6 +477,24 @@ void analysis(){
 
     if (xgate && diffrdtgate && cointimegate) {
       x_diffrdt_coinTime_gatedEx->Fill(Ex);
+    }
+
+    if (xgate && diffrdtgate && cointimegate && !oxygen) {
+      x_diffrdt_coinTime_gatedEx->Fill(Ex);
+
+      Ex_d_17Fw17Orecoils[detID % 6]->Fill(Ex);
+      Ex_d_17Fw17Orecoils_morebins[detID % 6]->Fill(Ex);
+
+      for (size_t ii = 0; ii < pos_half.size(); ii++) {
+	double z_start = pos_half[ii] - 25.;
+	double z_end = (ii + 1 < pos_half.size()) ? pos_half[ii] : -220.;
+
+	if (z[detID] >= z_start && z[detID] < z_end) {
+	  Ex_d_half_dets_17Fw17Orecoils[ii]->Fill(Ex);
+	  Ex_d_half_dets_17Fw17Orecoils_morebins[ii]->Fill(Ex);
+	  break;
+	}
+      }
     }
 
     Ex_nogates->Fill(Ex);
@@ -499,6 +536,49 @@ void analysis(){
 
   outputFileSingle->Close();
 
+  if (!oxygen) {
+    TFile* outputFile17Orecoils = new TFile(saveFileHists17Orecoils, "RECREATE");
+
+    for (int ii = 0; ii < 6; ++ii)
+      Ex_d_17Fw17Orecoils[ii]->Write();
+
+    outputFile17Orecoils->Close();
+
+    TFile* outputFileHalfDets17Orecoils = new TFile(saveFileHistsHalfDets17Orecoils, "RECREATE");
+
+    for (int ii = 0; ii < 12; ++ii)
+      Ex_d_half_dets_17Fw17Orecoils[ii]->Write();
+
+    outputFileHalfDets17Orecoils->Close();
+
+    TFile* outputFile17OrecoilsMoreBins = new TFile(saveFileHists17OrecoilsMoreBins, "RECREATE");
+
+    for (int ii = 0; ii < 6; ++ii)
+      Ex_d_17Fw17Orecoils_morebins[ii]->Write();
+
+    outputFile17OrecoilsMoreBins->Close();
+
+    TFile* outputFileHalfDets17OrecoilsMoreBins = new TFile(saveFileHistsHalfDets17OrecoilsMoreBins, "RECREATE");
+
+    for (int ii = 0; ii < 12; ++ii)
+      Ex_d_half_dets_17Fw17Orecoils_morebins[ii]->Write();
+
+    outputFileHalfDets17OrecoilsMoreBins->Close();
+  }
+
+  TFile* outputFileMoreBins = new TFile(saveFileHistsMoreBins, "RECREATE");
+
+  for (int ii = 0; ii < 6; ++ii)
+    Ex_d_morebins[ii]->Write();
+
+  outputFileMoreBins->Close();
+
+  TFile* outputFileHalfDetsMoreBins = new TFile(saveFileHistsHalfDetsMoreBins, "RECREATE");
+
+  for (int ii = 0; ii < 12; ++ii)
+    Ex_d_half_dets_morebins[ii]->Write();
+
+  outputFileHalfDetsMoreBins->Close();
 
   //================================= fitting 17O
   if (fitting) {
