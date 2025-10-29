@@ -134,23 +134,31 @@ void poster_angular_dist_17O_half_dets_relative_sf() {
     {25.05, 27.51, 2.46, 26.28, 1.0869, 2.41137 * 4./3.}, //11
   };
 
+  std::vector<std::vector<double>> ex7100_half_dets = {
+    { 9.74, 16.15, 6.40, 12.95, 1.4348, 3.80869 * 4./3.}, // 8
+    {16.37, 20.10, 3.73, 18.23, 1.1665, 4.12727 * 4./3.}, // 9
+    {21.42, 24.28, 2.86, 22.85, 1.1122, 2.44996 * 4./3.}, //10
+    {24.42, 26.95, 2.53, 25.69, 1.0981, 2.41137 * 4./3.}, //11
+  };
+
   std::vector<std::vector<std::vector<double>>> data;
   std::vector<double> Ex_values;
   std::vector<std::vector<TString>> labels;
 
-  data = {ex1982_half_dets, ex3920_half_dets, ex3552_3630_half_dets, ex5255_5340_5375_half_dets, ex6200_half_dets, ex6930_half_dets};
-  Ex_values = {1.982, 3.920, 3.552, 5.255, 6.200, 6.930, 6.930, 6.930, 6.930, 6.930};
+  data = {ex1982_half_dets, ex3920_half_dets, ex3552_3630_half_dets, ex5255_5340_5375_half_dets, ex6200_half_dets, ex6930_half_dets, ex7100_half_dets};
+  Ex_values = {1.982, 3.920, 3.552, 5.255, 6.200, 6.930, 6.930, 6.930, 6.930, 6.930, 7.100};
   labels = {
-    {"\\ell = 0", "\\ell = 2"}, // 1.982
-    {"\\ell = 0", "\\ell = 2", "\\ell = 3", "\\ell = 4"}, // 3.920
-    {"\\ell = 2", "\\ell = 2",}, // 3.552 & 3.630
-    {"\\ell = 2", "\\ell = 0", "\\ell = 0"}, // 5.255 & 5.340 & 5.375
-    {"\\ell = 1"}, // 6200
-    {"\\ell = 1"}, // 6930, 30
-    {"\\ell = 3"}, // 6930, 31
-    {"\\ell = 2"}, // 6930, 34
-    {"\\ell = 0"}, // 6930, 35
-    {"\\ell = 2", "\\ell = 0"}, // 6930, 34, 35
+    {"\\ell = 0, 0d5/2", "\\ell = 2, 1s1/2"}, // 1.982
+    {"\\ell = 0, 1s1/2", "\\ell = 2, 0d5/2", "\\ell = 3", "\\ell = 4"}, // 3.920
+    {"\\ell = 2, 0d5/2\\;4^{+}, 3.552", "\\ell = 2, 0d5/2\\;0^{+}, 3.630",}, // 3.552 & 3.630
+    {"\\ell = 2, 0d5/2\\;0^{+}, 5.340", "\\ell = 0, 1s1/2\\;2^{+}, 5.255", "\\ell = 0, 1s1/2\\;3^{+}, 5.375"}, // 5.255 & 5.340 & 5.375
+    {"\\ell = 1, 1p3/2\\;1^{-}"}, // 6200
+    {"\\ell = 1, 1p3/2\\;1^{-}"}, // 6930, 30
+    {"\\ell = 3, 0f7/2\\;1^{-}"}, // 6930, 31
+    {"\\ell = 2, 0d5/2\\;0^{+}"}, // 6930, 34
+    {"\\ell = 0, 1s1/2\\;2^{+}"}, // 6930, 35
+    {"\\ell = 2, 0d5/2\\;0^{+}", "\\ell = 0, 1s1/2\\;2^{+}"}, // 6930, 34, 35
+    {"\\ell = 2, 0d5/2\\;4^{+}"}, // 6930, 35
   };
 
   std::vector<TGraph*> graphs;
@@ -203,7 +211,8 @@ void poster_angular_dist_17O_half_dets_relative_sf() {
     {ex6930_half_dets, {30, 31, 34, 35}},
     {ex6930_half_dets, {30, 31, 34, 35}},
     {ex6930_half_dets, {30, 31, 34, 35}},
-    {ex6930_half_dets, {30, 31, 34, 35}}
+    {ex6930_half_dets, {30, 31, 34, 35}},
+    {ex7100_half_dets, {38}}
   };
 
   std::vector<std::pair<std::vector<int>, std::vector<double>>> fitPairs;
@@ -217,7 +226,8 @@ void poster_angular_dist_17O_half_dets_relative_sf() {
     {{31}, {1.0}}, // 6.930
     {{34}, {1.0}}, // 6.930
     {{35}, {1.0}}, // 6.930
-    {{34, 35}, {1.0, 1.0}} // 6.930
+    {{34, 35}, {1.0, 1.0}}, // 6.930
+    {{38}, {1.0}} // 7.100
   };
 
   std::vector<int> color = {629, 596, 418, 801, 905, 8, 9, 1, 49, 42, 40};
@@ -284,7 +294,7 @@ void poster_angular_dist_17O_half_dets_relative_sf() {
     TAxis *axis = experimentGraph->GetXaxis();
     axis->SetLimits(0.,60.);
     
-    experimentGraph->SetTitle(Form("Ex = %.3f MeV;#theta_{CM} (deg);d#sigma/d#Omega (a. u.)", Ex_values[mappingIndex]));
+    experimentGraph->SetTitle(Form("Ex = %.3f MeV (fixed SF);#theta_{CM} (deg);d#sigma/d#Omega (a. u.)", Ex_values[mappingIndex]));
 
     gPad->SetLeftMargin(0.15);   // więcej miejsca na tytuł osi Y
     gPad->SetBottomMargin(0.15); // więcej miejsca na tytuł osi X
@@ -308,7 +318,7 @@ void poster_angular_dist_17O_half_dets_relative_sf() {
     latex.SetTextAlign(22);
     //latex.DrawLatexNDC(0.5, 0.92, Form("Ex = %.3f MeV", Ex_values[mappingIndex]));
 
-    TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.85);
+    TLegend* legend = new TLegend(0.6, 0.75, 0.9, 0.89);
     legend->SetTextSize(0.04);
     legend->SetMargin(0.1);
     legend->SetBorderSize(0);
