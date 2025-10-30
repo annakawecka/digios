@@ -9,10 +9,12 @@
 #include <algorithm>
 #include <fstream>
 #include <TLatex.h>
+#include <TMath.h>
 
 std::vector<TGraph*> graphsDWBA;
 int nr_of_functions = 0;
 int functions_ids[10] = {0,0,0,0,0,0,0,0,0,0};
+std::vector<double> functions_relative_strengths;
 
 std::vector<TString> potentials = {
   "AK", "AV", "AM", "AG", "AP",
@@ -26,13 +28,28 @@ std::vector<TString> potentials = {
 
 bool checking_gs = false;
 
-double combinedDWBA(double *x, double *par) {
+double combinedDWBA_fixedRatio(double *x, double *par) {
   double result = 0;
+  double A = par[0];
   for (size_t i = 0; i < nr_of_functions; ++i) {
+    int gid = functions_ids[i];
+    if ((size_t)gid >= graphsDWBA.size()) continue;
     double dwba_val = graphsDWBA[functions_ids[i]]->Eval(x[0]);
-    result += par[i] * dwba_val;
+    result += A * functions_relative_strengths[i] * dwba_val;
   }
   return result;
+}
+
+double singleDWBA_component(double *x, double *par) {
+  // par[0] = normalization A
+  // par[1] = component index
+  int idx = static_cast<int>(par[1]);
+  if (idx < 0 || idx >= (int)nr_of_functions) return 0.0;
+  int gid = functions_ids[idx];
+  if ((size_t)gid >= graphsDWBA.size()) return 0.0;
+
+  double dwba_val = graphsDWBA[gid]->Eval(x[0]);
+  return par[0] * functions_relative_strengths[idx] * dwba_val;
 }
 
 std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indices) {
@@ -54,7 +71,7 @@ std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indic
   return combinations;
 }
 
-void poster_angular_dist_17Fw17Orecoils_half_dets() {
+void poster_angular_dist_17Fw17Orecoils_half_dets_relative_sf() {
 
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, integral_unc;
 
@@ -66,7 +83,7 @@ void poster_angular_dist_17Fw17Orecoils_half_dets() {
     {28.35, 30.45, 2.10, 29.40, 1.0331, (5.23575 + 0.) * 4./3.}, //10
     {30.56, 32.52, 1.97, 31.54, 1.0286, (4.94403 + 0.) * 4./3.}, //11
   }; // thetaCM calculated for (6.136 + 6.163) / 2.0 = 6.1495
-
+  
   std::vector<std::vector<double>> ex6633_6643_half_dets = {
     { 8.00, 14.53, 6.53, 11.26, 1.2751, 0.00013 + 14.4628}, // 6
     {14.80, 18.82, 4.02, 16.81, 1.1635, 0. + 9.81058}, // 7
@@ -86,7 +103,7 @@ void poster_angular_dist_17Fw17Orecoils_half_dets() {
     {"\\ell = 2, 0d5/2\\;0^{+}, 6.136", "\\ell = 0, 1s1/2\\;3^{+}, 6.163"}, // 6136_6163 will probably be IAS of thr 5.34 (d) and 5.38 (s) states in O; there might be also addition of 6.108 state in F, I'm not sure what l is that, but also 6.108 is T=0 state so it's weaker
     {"\\ell = 3, 1f7/2\\;2^{-}, 6.163"} // 6.633 state - parity and T unknown, 6.643 - 2- state but T=1 so stronger? I don't know which state could it possibly correspond to in oxygen - maybe the 6.35 state? It's also 2-, but very weak
   };
-
+  
   std::vector<TGraph*> graphs;
 
   TFile *file;
@@ -94,7 +111,7 @@ void poster_angular_dist_17Fw17Orecoils_half_dets() {
   const auto& pot = potentials[0];
 
   TString filename = Form("DWBA_17F_%s_he.root", pot.Data());
-  TString outputDir = Form("plots_17Fw17Orecoils/minuit_extra5/ang_dist/%s", pot.Data());
+  TString outputDir = Form("plots_17Fw17Orecoils/minuit_extra5/ang_dist_fixedRatio/%s", pot.Data());
   gSystem->mkdir(outputDir, kTRUE);
   
   if (checking_gs) {
@@ -127,21 +144,18 @@ void poster_angular_dist_17Fw17Orecoils_half_dets() {
   }
 
   std::vector<std::pair<std::vector<std::vector<double>>, std::vector<int>>> fitMappings;
-
-  std::vector<std::vector<std::vector<int>>> fitPairs;
-
-  std::cout << "Mappings " << std::endl;
-  
   fitMappings = {
     {ex6136_6163_half_dets, {0, 1}},
     {ex6633_6643_half_dets, {2}}
   };
+
+  std::vector<std::pair<std::vector<int>, std::vector<double>>> fitPairs;
   fitPairs =  {
-    {{0, 1}},
-    {{2}}
+    {{0, 1}, {0.16, 1.01}},
+    {{2}, {1.0}}, 
   };
 
-  std::vector<int> color = {629, 596, 418, 801, 905, 8, 9, 1};
+  std::vector<int> color = {629, 596, 418, 801, 905, 8, 9, 1, 49, 42, 40};
   int ncolor = 0;
 
   std::ofstream resultFile;
@@ -152,6 +166,11 @@ void poster_angular_dist_17Fw17Orecoils_half_dets() {
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
     const auto& dataSet = fitMappings[mappingIndex].first;
     const auto& fitIndices = fitMappings[mappingIndex].second;
+
+    nr_of_functions = fitPairs[mappingIndex].first.size();
+    functions_relative_strengths = fitPairs[mappingIndex].second;
+    for (int i = 0; i < nr_of_functions; ++i)
+      functions_ids[i] = fitPairs[mappingIndex].first[i];
 
     double bestChi2 = 1e9;
     std::vector<int> bestCombination;
@@ -230,82 +249,62 @@ void poster_angular_dist_17Fw17Orecoils_half_dets() {
     legend->SetBorderSize(0);
     legend->SetFillColor(0);
 
-    std::vector<int> bestSubset;
+    //TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
+    TF1* fitFunction = new TF1(Form("fitFunction_%lu", mappingIndex), combinedDWBA_fixedRatio, 0, 60, 1);
+    fitFunction->SetParameter(0, 1.0);
+    fitFunction->SetParLimits(0, 0.0, 100.0);
 
-    std::vector<TF1*> allFitFunctions;
+    TFitResultPtr fitResult = experimentGraph->Fit(fitFunction, "RLS0");
 
-    for (const auto& subset : fitPairs[mappingIndex]) {
-      //TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
-      TF1* fitFunction = new TF1(Form("fitFunction_%lu", subset.size()), combinedDWBA, 0, 60, subset.size());
-      for (size_t i = 0; i < subset.size(); ++i) {
-	fitFunction->SetParameter(i, 0.0);
-	fitFunction->SetParLimits(i, 0.0, 100.0);
-      }
+    double chi2 = 1000000.;
 
-      nr_of_functions = subset.size();
-      for(int i=0; i<nr_of_functions; i++){
-        functions_ids[i] = subset[i];
-      }
-
-      TFitResultPtr fitResult = experimentGraph->Fit(fitFunction, "RLS0");
-
-      double chi2 = 1000000.;
-
-      if (fitResult->IsValid()) {
-	chi2 = fitResult->Chi2();
-      }
-      else {
-	std::cout << "Invalid fit " << std::endl;
-      }
-      
-      fitFunction->SetLineColor(color[ncolor]);
-      fitFunction->SetLineWidth(4);
-      fitFunction->Draw("L SAME");
-
-      if (nr_of_functions > 1)
-	legend->AddEntry(fitFunction, "Total fit", "l");
-
-      for (size_t comp = 0; comp < subset.size(); ++comp) {
-	TF1* compFunc = new TF1(Form("fitComponent_%lu_%lu", mappingIndex, comp),
-				combinedDWBA, 0, 60, subset.size());
-
-	for (size_t i = 0; i < subset.size(); ++i) {
-	  if (i == comp) compFunc->SetParameter(i, fitFunction->GetParameter(i));
-	  else compFunc->SetParameter(i, 0.0);
-	}
-
-	compFunc->SetLineColor(color[(ncolor + comp + 1) % color.size()]);
-	compFunc->SetLineStyle(2);
-	compFunc->SetLineWidth(4);
-	compFunc->Draw("L SAME");
-
-	legend->AddEntry(compFunc, Form("%s", labels[mappingIndex][comp].Data()), "l");
-      }
-
-      resultFile << "========================= Fit for Ex = " << Ex_values[mappingIndex] << " MeV =========================" << std::endl;
-      resultFile << "Fitted Function Indices: ";
-      for (const auto& element : subset) {
-	resultFile << element << " ";
-      }
-      resultFile << std::endl;
-
-      resultFile << "Function Names: "  << std::endl;
-      for (const auto& element : subset) {
-	resultFile << graphsDWBA[element]->GetName() << std::endl;
-      }
-      resultFile << std::endl;
-
-      resultFile << "Fit Parameters: ";
-      for (int i = 0; i < fitFunction->GetNpar(); ++i) {
-	resultFile << fitFunction->GetParameter(i) << " (" << fitFunction->GetParError(i) << ") ";
-      }
-      resultFile << std::endl;
-
-      resultFile << "Chi2 (from TF1): " << chi2 << std::endl;
-      resultFile << "------------------------------------------------------------" << std::endl << std::endl;
-
-      ncolor++;
+    if (fitResult->IsValid()) {
+      chi2 = fitResult->Chi2();
     }
+    else {
+      std::cout << "Invalid fit " << std::endl;
+    }
+      
+    fitFunction->SetLineColor(color[ncolor]);
+    fitFunction->SetLineWidth(4);
+    fitFunction->Draw("L SAME");
+
+    if (nr_of_functions > 1)
+      legend->AddEntry(fitFunction, "Total fit", "l");
+
+    for (size_t comp = 0; comp < nr_of_functions; ++comp) {
+      TF1* compFunc = new TF1(Form("fitComponent_%lu_%lu", mappingIndex, comp),
+			      singleDWBA_component, 0, 60, 2);
+      compFunc->SetParameter(0, fitFunction->GetParameter(0)); // same normalization
+      compFunc->SetParameter(1, comp); // which DWBA component to draw
+      compFunc->SetLineColor(color[(ncolor + comp + 1) % color.size()]);
+      compFunc->SetLineStyle(2);
+      compFunc->SetLineWidth(3);
+      compFunc->Draw("L SAME");
+
+      legend->AddEntry(compFunc, Form("%s", labels[mappingIndex][comp].Data()), "l");
+    }
+
+    resultFile << "========================= Fit for Ex = " << Ex_values[mappingIndex] << " MeV =========================\n";
+    resultFile << "DWBA function indices: ";
+    for (auto id : fitPairs[mappingIndex].first) resultFile << id << " ";
+    resultFile << std::endl;
+    for (size_t comp = 0; comp < nr_of_functions; ++comp) {
+      int gid = functions_ids[comp];
+      TString gname = graphsDWBA[gid]->GetName();  // or custom name if you have it
+      resultFile << "  [" << comp << "] "
+	   << gname.Data()
+	   << "   SF_rel = " << functions_relative_strengths[comp]
+	   << std::endl;
+    }
+    
+    resultFile << "\nRelative SF ratios: ";
+    for (auto r : fitPairs[mappingIndex].second) resultFile << r << " ";
+    resultFile << "\nNormalization A = " << fitFunction->GetParameter(0)
+               << " ± " << fitFunction->GetParError(0)
+               << "\nChi2 = " << chi2 << "\n\n";
+
+    ncolor++;
       
 
     TLatex latex2;
