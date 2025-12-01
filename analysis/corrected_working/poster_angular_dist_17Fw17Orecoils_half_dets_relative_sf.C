@@ -76,21 +76,21 @@ void poster_angular_dist_17Fw17Orecoils_half_dets_relative_sf() {
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, integral_unc;
 
   std::vector<std::vector<double>> ex6136_6163_half_dets = {
-    {12.90, 17.50, 4.61, 15.20, 1.2078, 4.01808 + 0.}, // 6
-    {17.70, 21.02, 3.32, 19.36, 1.0991, 1.87111 + 0.}, // 7
-    {22.30, 24.94, 2.64, 23.62, 1.0577, (3.28537 + 0.) * 4./3.}, // 8
-    {25.07, 27.43, 2.36, 26.25, 1.0417, (4.51246 + 0.) * 4./3.}, // 9
-    {28.35, 30.45, 2.10, 29.40, 1.0331, (5.23575 + 0.) * 4./3.}, //10
-    {30.56, 32.52, 1.97, 31.54, 1.0286, (4.94403 + 0.) * 4./3.}, //11
+    {12.90, 17.50, 4.61, 15.20, 1.2078, 4.01808 + 0., sqrt( pow(0.5717, 2) + pow(0.6187, 2) )}, // 6
+    {17.70, 21.02, 3.32, 19.36, 1.0991, 1.87111 + 0., sqrt( pow(0.430758, 2) + pow(0.21, 2) )}, // 7
+    {22.30, 24.94, 2.64, 23.62, 1.0577, (3.28537 + 0.) * 4./3., sqrt( pow(0.5086, 2) + pow(0.4576, 2) )}, // 8
+    {25.07, 27.43, 2.36, 26.25, 1.0417, (4.51246 + 0.) * 4./3., sqrt( pow(0.592214, 2) + pow(0.4192, 2) )}, // 9
+    {28.35, 30.45, 2.10, 29.40, 1.0331, (5.23575 + 0.) * 4./3., sqrt( pow(0.6359, 2) + pow(1.95704, 2) )}, //10
+    {30.56, 32.52, 1.97, 31.54, 1.0286, (4.94403 + 0.) * 4./3., sqrt( pow(0.6184, 2) + pow(0.845107, 2) )}, //11
   }; // thetaCM calculated for (6.136 + 6.163) / 2.0 = 6.1495
   
   std::vector<std::vector<double>> ex6633_6643_half_dets = {
-    { 8.00, 14.53, 6.53, 11.26, 1.2751, 0.00013 + 14.4628}, // 6
-    {14.80, 18.82, 4.02, 16.81, 1.1635, 0. + 9.81058}, // 7
-    {20.29, 23.21, 2.93, 21.75, 1.0841, (0. + 3.84624) * 4./3.}, // 8
-    {23.35, 25.91, 2.56, 24.63, 1.0656, (0. + 4.66187) * 4./3.}, // 9
-    {26.90, 29.13, 2.24, 28.01, 1.0506, (0.00018577 + 3.37614) * 4./3.}, //10
-    {29.24, 31.32, 2.07, 30.28, 1.0447, (0.0 + 3.12785)  * 4./3.}, //11
+    { 8.00, 14.53, 6.53, 11.26, 1.2751, 0.00013 + 14.4628,              sqrt( pow(1.03, 2) + pow(5.09, 2) )}, // 6
+    {14.80, 18.82, 4.02, 16.81, 1.1635, 0. + 9.81058,                   sqrt( pow(2.13, 2) + pow(0.85, 2) )}, // 7
+    {20.29, 23.21, 2.93, 21.75, 1.0841, (0. + 3.84624) * 4./3.,         sqrt( pow(1.5904, 2) + pow(0.5425, 2) )}, // 8
+    {23.35, 25.91, 2.56, 24.63, 1.0656, (0. + 4.66187) * 4./3.,         sqrt( pow(1.66424, 2) + pow(0.6285, 2) )}, // 9
+    {26.90, 29.13, 2.24, 28.01, 1.0506, (0.00018577 + 3.37614) * 4./3., sqrt( pow(2.21755, 2) + pow(0.53759, 2) )}, //10
+    {29.24, 31.32, 2.07, 30.28, 1.0447, (0.0 + 3.12785)  * 4./3.,       sqrt( pow(1.23134, 2) + pow(0.512909, 2) )}, //11
   }; // thetaCM calculated for (6.633 + 6.643) / 2. = 6.638
 
   std::vector<std::vector<std::vector<double>>> data;
@@ -111,7 +111,7 @@ void poster_angular_dist_17Fw17Orecoils_half_dets_relative_sf() {
   const auto& pot = potentials[0];
 
   TString filename = Form("DWBA_17F_%s_he.root", pot.Data());
-  TString outputDir = Form("plots_17Fw17Orecoils/minuit_extra5/ang_dist_fixedRatio/%s", pot.Data());
+  TString outputDir = Form("plots_17Fw17Orecoils/minuit_extra5/ang_dist_fixedRatio_newunc/%s", pot.Data());
   gSystem->mkdir(outputDir, kTRUE);
   
   if (checking_gs) {
@@ -193,7 +193,8 @@ void poster_angular_dist_17Fw17Orecoils_half_dets_relative_sf() {
       
       theta_means.push_back(det[3]);
       int_corr_sins.push_back(det[5] / det[4] );
-      int_unc.push_back(TMath::Sqrt(integral_corr / sin_x_dx));
+      //int_unc.push_back(TMath::Sqrt(integral_corr / sin_x_dx));
+      int_unc.push_back(integral_unc / sin_x_dx);
       x_unc.push_back(0.0);
     }
 
