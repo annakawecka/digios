@@ -9,10 +9,12 @@
 #include <algorithm>
 #include <fstream>
 #include <TLatex.h>
+#include <TMath.h>
 
 std::vector<TGraph*> graphsDWBA;
 int nr_of_functions = 0;
 int functions_ids[10] = {0,0,0,0,0,0,0,0,0,0};
+std::vector<double> functions_relative_strengths;
 
 std::vector<TString> potentials = {
   "AK", "AV", "AM", "AG", "AP",
@@ -26,13 +28,28 @@ std::vector<TString> potentials = {
 
 bool checking_gs = false;
 
-double combinedDWBA(double *x, double *par) {
+double combinedDWBA_fixedRatio(double *x, double *par) {
   double result = 0;
+  double A = par[0];
   for (size_t i = 0; i < nr_of_functions; ++i) {
+    int gid = functions_ids[i];
+    if ((size_t)gid >= graphsDWBA.size()) continue;
     double dwba_val = graphsDWBA[functions_ids[i]]->Eval(x[0]);
-    result += par[i] * dwba_val;
+    result += A * functions_relative_strengths[i] * dwba_val;
   }
   return result;
+}
+
+double singleDWBA_component(double *x, double *par) {
+  // par[0] = normalization A
+  // par[1] = component index
+  int idx = static_cast<int>(par[1]);
+  if (idx < 0 || idx >= (int)nr_of_functions) return 0.0;
+  int gid = functions_ids[idx];
+  if ((size_t)gid >= graphsDWBA.size()) return 0.0;
+
+  double dwba_val = graphsDWBA[gid]->Eval(x[0]);
+  return par[0] * functions_relative_strengths[idx] * dwba_val;
 }
 
 std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indices) {
@@ -54,7 +71,7 @@ std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indic
   return combinations;
 }
 
-void poster_angular_dist_17F_half_dets() {
+void poster_angular_dist_17F_half_dets_relative_sf_sm_i_inverted_states() {
 
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, integral_unc;
 
@@ -151,28 +168,20 @@ void poster_angular_dist_17F_half_dets() {
     {33.36, 35.12, 1.77, 34.24, 0.9939, 1.73812 * 4./3., 0.51603} //11 - I don't trust this too much
   };
 
-  std::vector<std::vector<double>> ex000_half_dets = {
-    {16.21, 22.07, 5.86, 19.14, 1.9224, 4.668,     1.0991701}, // 0
-    {23.23, 27.47, 4.24, 25.35, 1.8172, 3.1347672, 0.96539170}, // 1
-    {28.40, 31.96, 3.56, 30.18, 1.7898, 2.3449830, 0.66363009}, // 2
-    {32.76, 35.91, 3.15, 34.33, 1.7752, 1.8110064, 0.57372493}, // 3
-  };
-  
   std::vector<std::vector<std::vector<double>>> data;
   std::vector<double> Ex_values;
   std::vector<std::vector<TString>> labels;
 
-  data = {ex0937_1041_1121_half_dets, ex4964_half_dets, ex3061_half_dets, ex4652_4753_half_dets, ex4360_half_dets, ex4115_half_dets, ex3724_3839_half_dets, ex000_half_dets};
-  Ex_values = {1.041, 4.964, 3.062, 4.652, 4.360, 4.115, 3.790, 0.000};
+  data = {ex0937_1041_1121_half_dets, ex4964_half_dets, ex3061_half_dets, ex4652_4753_half_dets, ex4360_half_dets, ex4115_half_dets, ex3724_3839_half_dets};
+  Ex_values = {1.041, 4.964, 3.062, 4.652, 4.360, 4.115, 3.790};
   labels = {
-    {"\\ell = 2, 0d5/2\\;3^{+}, 0.937", "\\ell = 0, 1s1/2\\;3^{+}, 0.937", "\\ell = 2, 0d5/2\\;0^{+}, 1.041", "\\ell = 2, 0d5/2\\;5^{+}, 1.121"},
-    {"\\ell = 0, 1s1/2\\;2^{+}", "\\ell = 2, 0d5/2\\;2^{+}"}, // 4.964
-    {"\\ell = 0, 1s1/2\\;2^{+}", "\\ell = 2, 0d5/2\\;2^{+}"}, // 3.061
-    {"\\ell = 2, 0d5/2\\;4^{+}, 4.652", "\\ell = 2, 0d5/2\\;0^{+}, 4.753"},
-    {"\\ell = 2, 0d5/2\\;1^{+}"}, // 4.360
-    {"\\ell = 0, 1s1/2\\;3^{+}", "\\ell = 2, 0d5/2\\;2^{+}"}, // 4.115
-    {"\\ell = 0, 1s1/2\\;2^{+}, 3.839", "\\ell = 2, 0d5/2\\;2^{+}, 3.839", "\\ell = 2, 0d5/2\\;1^{+}, 3.724"},
-    {"\\ell = 2, 0d5/2\\;1^{+}"}, // 0.000
+    {"\\ell = 2, 0d5/2\\;3^{+}, 0.937", "\\ell = 0, 1s1/2\\;3^{+}, 0.937", "\\ell = 2, 0d3/2\\;3^{+}, 0.937", "\\ell = 2, 0d5/2\\;0^{+}, 1.041", "\\ell = 2, 0d5/2\\;5^{+}, 1.121"},
+    {"\\ell = 0, 1s1/2\\;2^{+}", "\\ell = 2, 0d5/2\\;2^{+}",  "\\ell = 2, 0d3/2\\;2^{+}"}, // 4.964
+    {"\\ell = 0, 1s1/2\\;2^{+}", "\\ell = 2, 0d5/2\\;2^{+}", "\\ell = 2, 0d3/2\\;2^{+}"}, // 3.061
+    {"\\ell = 2, 0d5/2\\;4^{+}, 4.652", "\\ell = 2, 0d3/2\\;4^{+}, 4.652", "\\ell = 2, 0d5/2\\;0^{+}, 4.753"},
+    {"\\ell = 2, 0d5/2\\;1^{+}", "\\ell = 2, 0d3/2\\;1^{+}"}, // 4.360
+    {"\\ell = 0, 1s1/2\\;3^{+}", "\\ell = 2, 0d5/2\\;2^{+}", "\\ell = 2, 0d3/2\\;2^{+}"}, // 4.115
+    {"\\ell = 2, 0d5/2\\;1^{+}, 3.724", "\\ell = 2, 0d3/2\\;1^{+}, 3.724", "\\ell = 0, 1s1/2\\;2^{+}, 3.839", "\\ell = 2, 0d3/2\\;2^{+}, 3.839", "\\ell = 2, 0d5/2\\;2^{+}, 3.839"},
   };
 
   std::vector<TGraph*> graphs;
@@ -182,7 +191,7 @@ void poster_angular_dist_17F_half_dets() {
   const auto& pot = potentials[0];
 
   TString filename = Form("DWBA_17F_%s.root", pot.Data());
-  TString outputDir = Form("plots_17F/minuit_new/ang_dist_newunc/%s", pot.Data());
+  TString outputDir = Form("plots_17F/minuit_new/ang_dist_fixedRatio_smi_newunc_inverted_states/%s", pot.Data());
   gSystem->mkdir(outputDir, kTRUE);
   
   if (checking_gs) {
@@ -215,33 +224,28 @@ void poster_angular_dist_17F_half_dets() {
   }
 
   std::vector<std::pair<std::vector<std::vector<double>>, std::vector<int>>> fitMappings;
-
-  std::vector<std::vector<std::vector<int>>> fitPairs;
-
-  std::cout << "Mappings " << std::endl;
-  
   fitMappings = {
-    {ex0937_1041_1121_half_dets, {25, 26, 27, 28}},
-    {ex4964_half_dets, {2, 3}},//, 11, 12}},
-    {ex3061_half_dets, {5, 6}},
-    {ex4652_4753_half_dets, {29, 30}},
-    {ex4360_half_dets, {21}},
-    {ex4115_half_dets, {20, 19}},
-    {ex3724_3839_half_dets, {24, 23, 22}},
-    {ex000_half_dets, {31}}
-  };
-  fitPairs =  {
-    {{25, 26, 27, 28}},
-    {{2, 3}},
-    {{5, 6}},
-    {{29, 30}},
-    {{21}},
-    {{20, 19}},
-    {{24, 23, 22}},
-    {{31}}
+    {ex0937_1041_1121_half_dets, {25, 26, 32, 27, 28}},
+    {ex4964_half_dets, {2, 3, 4}},//, 11, 12}},
+    {ex3061_half_dets, {5, 6, 33}},
+    {ex4652_4753_half_dets, {29, 38, 30}},
+    {ex4360_half_dets, {21, 37}},
+    {ex4115_half_dets, {20, 19, 36}},
+    {ex3724_3839_half_dets, {22, 34, 24, 35, 23}}
   };
 
-  std::vector<int> color = {629, 596, 418, 801, 905, 8, 9, 1};
+  std::vector<std::pair<std::vector<int>, std::vector<double>>> fitPairs;
+  fitPairs =  {
+    {{25, 26, 32, 27, 28}, {0.2640, 0.3211, 0.0294, 0.7514, 1.0}}, // 0.937: 0d5/2, 1s1/2, 0d3/2, 1.042, 1.121
+    {{2, 3, 4}, {0.3370, 0.3924, 0.0034}}, // 4.694: 1s1/2, 0d5/2, 0d3/2
+    {{5, 6, 33}, {0.1471, 0.5742, 0.0012}}, // 3.061, 1s1/2, 0d5/2, 0d3/2 
+    {{29, 38, 30}, {0.9241, 0.0349, 0.1794}}, // 4.652: 0d5/2, 0d3/2, 4.753: 0d5/2
+    {{21, 37}, {0.1860, 0.1908}}, // 4.360
+    {{20, 19, 36}, {0.1379, 0.6527, 0.0144}}, // 4.115: 1s1/2, 0d5/2, od3/2
+    {{22, 34, 24, 35, 23}, {0.0987, 0.087, 0.3356, 0.0703, 0.0095}} // 3.724: 0d5/2, 0d3/2, 3.839:1s1/2, 0d3/2, 0d5/2
+  };
+
+  std::vector<int> color = {629, 596, 418, 801, 905, 8, 9, 1, 49, 42, 40};
   int ncolor = 0;
 
   std::ofstream resultFile;
@@ -252,6 +256,11 @@ void poster_angular_dist_17F_half_dets() {
   for (size_t mappingIndex = 0; mappingIndex < fitMappings.size(); ++mappingIndex) {
     const auto& dataSet = fitMappings[mappingIndex].first;
     const auto& fitIndices = fitMappings[mappingIndex].second;
+
+    nr_of_functions = fitPairs[mappingIndex].first.size();
+    functions_relative_strengths = fitPairs[mappingIndex].second;
+    for (int i = 0; i < nr_of_functions; ++i)
+      functions_ids[i] = fitPairs[mappingIndex].first[i];
 
     double bestChi2 = 1e9;
     std::vector<int> bestCombination;
@@ -331,82 +340,62 @@ void poster_angular_dist_17F_half_dets() {
     legend->SetBorderSize(0);
     legend->SetFillColor(0);
 
-    std::vector<int> bestSubset;
+    //TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
+    TF1* fitFunction = new TF1(Form("fitFunction_%lu", mappingIndex), combinedDWBA_fixedRatio, 0, 60, 1);
+    fitFunction->SetParameter(0, 1.0);
+    fitFunction->SetParLimits(0, 0.0, 100.0);
 
-    std::vector<TF1*> allFitFunctions;
+    TFitResultPtr fitResult = experimentGraph->Fit(fitFunction, "RLS0");
 
-    for (const auto& subset : fitPairs[mappingIndex]) {
-      //TF1* fitFunction = new TF1("fitFunction", combinedDWBA, 0, 60, subset.size());
-      TF1* fitFunction = new TF1(Form("fitFunction_%lu", subset.size()), combinedDWBA, 0, 60, subset.size());
-      for (size_t i = 0; i < subset.size(); ++i) {
-	fitFunction->SetParameter(i, 0.0);
-	fitFunction->SetParLimits(i, 0.0, 100.0);
-      }
+    double chi2 = 1000000.;
 
-      nr_of_functions = subset.size();
-      for(int i=0; i<nr_of_functions; i++){
-        functions_ids[i] = subset[i];
-      }
-
-      TFitResultPtr fitResult = experimentGraph->Fit(fitFunction, "RLS0");
-
-      double chi2 = 1000000.;
-
-      if (fitResult->IsValid()) {
-	chi2 = fitResult->Chi2();
-      }
-      else {
-	std::cout << "Invalid fit " << std::endl;
-      }
-      
-      fitFunction->SetLineColor(color[ncolor]);
-      fitFunction->SetLineWidth(4);
-      fitFunction->Draw("L SAME");
-
-      if (nr_of_functions > 1)
-	legend->AddEntry(fitFunction, "Total fit", "l");
-
-      for (size_t comp = 0; comp < subset.size(); ++comp) {
-	TF1* compFunc = new TF1(Form("fitComponent_%lu_%lu", mappingIndex, comp),
-				combinedDWBA, 0, 60, subset.size());
-
-	for (size_t i = 0; i < subset.size(); ++i) {
-	  if (i == comp) compFunc->SetParameter(i, fitFunction->GetParameter(i));
-	  else compFunc->SetParameter(i, 0.0);
-	}
-
-	compFunc->SetLineColor(color[(ncolor + comp + 1) % color.size()]);
-	compFunc->SetLineStyle(2);
-	compFunc->SetLineWidth(4);
-	compFunc->Draw("L SAME");
-
-	legend->AddEntry(compFunc, Form("%s", labels[mappingIndex][comp].Data()), "l");
-      }
-
-      resultFile << "========================= Fit for Ex = " << Ex_values[mappingIndex] << " MeV =========================" << std::endl;
-      resultFile << "Fitted Function Indices: ";
-      for (const auto& element : subset) {
-	resultFile << element << " ";
-      }
-      resultFile << std::endl;
-
-      resultFile << "Function Names: "  << std::endl;
-      for (const auto& element : subset) {
-	resultFile << graphsDWBA[element]->GetName() << std::endl;
-      }
-      resultFile << std::endl;
-
-      resultFile << "Fit Parameters: ";
-      for (int i = 0; i < fitFunction->GetNpar(); ++i) {
-	resultFile << fitFunction->GetParameter(i) << " (" << fitFunction->GetParError(i) << ") ";
-      }
-      resultFile << std::endl;
-
-      resultFile << "Chi2 (from TF1): " << chi2 << std::endl;
-      resultFile << "------------------------------------------------------------" << std::endl << std::endl;
-
-      ncolor++;
+    if (fitResult->IsValid()) {
+      chi2 = fitResult->Chi2();
     }
+    else {
+      std::cout << "Invalid fit " << std::endl;
+    }
+      
+    fitFunction->SetLineColor(color[ncolor]);
+    fitFunction->SetLineWidth(4);
+    fitFunction->Draw("L SAME");
+
+    if (nr_of_functions > 1)
+      legend->AddEntry(fitFunction, "Total fit", "l");
+
+    for (size_t comp = 0; comp < nr_of_functions; ++comp) {
+      TF1* compFunc = new TF1(Form("fitComponent_%lu_%lu", mappingIndex, comp),
+			      singleDWBA_component, 0, 60, 2);
+      compFunc->SetParameter(0, fitFunction->GetParameter(0)); // same normalization
+      compFunc->SetParameter(1, comp); // which DWBA component to draw
+      compFunc->SetLineColor(color[(ncolor + comp + 1) % color.size()]);
+      compFunc->SetLineStyle(2);
+      compFunc->SetLineWidth(3);
+      compFunc->Draw("L SAME");
+
+      legend->AddEntry(compFunc, Form("%s", labels[mappingIndex][comp].Data()), "l");
+    }
+
+    resultFile << "========================= Fit for Ex = " << Ex_values[mappingIndex] << " MeV =========================\n";
+    resultFile << "DWBA function indices: ";
+    for (auto id : fitPairs[mappingIndex].first) resultFile << id << " ";
+    resultFile << std::endl;
+    for (size_t comp = 0; comp < nr_of_functions; ++comp) {
+      int gid = functions_ids[comp];
+      TString gname = graphsDWBA[gid]->GetName();  // or custom name if you have it
+      resultFile << "  [" << comp << "] "
+	   << gname.Data()
+	   << "   SF_rel = " << functions_relative_strengths[comp]
+	   << std::endl;
+    }
+    
+    resultFile << "\nRelative SF ratios: ";
+    for (auto r : fitPairs[mappingIndex].second) resultFile << r << " ";
+    resultFile << "\nNormalization A = " << fitFunction->GetParameter(0)
+               << " ± " << fitFunction->GetParError(0)
+               << "\nChi2 = " << chi2 << "\n\n";
+
+    ncolor++;
       
 
     TLatex latex2;

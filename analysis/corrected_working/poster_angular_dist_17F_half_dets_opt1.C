@@ -54,7 +54,7 @@ std::vector<std::vector<int>> generateCombinations(const std::vector<int>& indic
   return combinations;
 }
 
-void poster_angular_dist_17F_half_dets() {
+void poster_angular_dist_17F_half_dets_opt1() {
 
   double Tmin, Tmax, Dt, ThetaMean, sin_x_dx, integral_corr, integral_unc;
 
@@ -161,19 +161,23 @@ void poster_angular_dist_17F_half_dets() {
   std::vector<std::vector<std::vector<double>>> data;
   std::vector<double> Ex_values;
   std::vector<std::vector<TString>> labels;
+  std::vector<TString> titles;
 
   data = {ex0937_1041_1121_half_dets, ex4964_half_dets, ex3061_half_dets, ex4652_4753_half_dets, ex4360_half_dets, ex4115_half_dets, ex3724_3839_half_dets, ex000_half_dets};
   Ex_values = {1.041, 4.964, 3.062, 4.652, 4.360, 4.115, 3.790, 0.000};
   labels = {
-    {"\\ell = 2, 0d5/2\\;3^{+}, 0.937", "\\ell = 0, 1s1/2\\;3^{+}, 0.937", "\\ell = 2, 0d5/2\\;0^{+}, 1.041", "\\ell = 2, 0d5/2\\;5^{+}, 1.121"},
-    {"\\ell = 0, 1s1/2\\;2^{+}", "\\ell = 2, 0d5/2\\;2^{+}"}, // 4.964
-    {"\\ell = 0, 1s1/2\\;2^{+}", "\\ell = 2, 0d5/2\\;2^{+}"}, // 3.061
-    {"\\ell = 2, 0d5/2\\;4^{+}, 4.652", "\\ell = 2, 0d5/2\\;0^{+}, 4.753"},
-    {"\\ell = 2, 0d5/2\\;1^{+}"}, // 4.360
-    {"\\ell = 0, 1s1/2\\;3^{+}", "\\ell = 2, 0d5/2\\;2^{+}"}, // 4.115
-    {"\\ell = 0, 1s1/2\\;2^{+}, 3.839", "\\ell = 2, 0d5/2\\;2^{+}, 3.839", "\\ell = 2, 0d5/2\\;1^{+}, 3.724"},
-    {"\\ell = 2, 0d5/2\\;1^{+}"}, // 0.000
+    {"1 #font[42]{s}_{1/2}, 3^{+}", "0 #font[42]{d}_{5/2}, 5^{+}"}, // 0.937, 1.042, 1.121
+    {"1 #font[42]{s}_{1/2}, 2^{+}", "0 #font[42]{d}_{5/2}, 2^{+}"}, // 4.964
+    {"1 #font[42]{s}_{1/2}, 2^{+}", "0 #font[42]{d}_{5/2}, 2^{+}"}, // 3.061
+    {"0 #font[42]{d}_{5/2}, 4^{+}"}, // 4.652, 4.753
+    {"0 #font[42]{d}_{5/2}, 1^{+}"}, // 4.360
+    {"1 #font[42]{s}_{1/2}, 3^{+}", "0 #font[42]{d}_{5/2}, 2^{+}"}, // 4.115
+    {"1 #font[42]{s}_{1/2}, 2^{+}", "0 #font[42]{d}_{5/2}, 2^{+}"}, // 3.724, 3.839
+    {"0 #font[42]{d}_{3/2}, 1^{+}"}, // 0.000
   };
+  
+
+  titles = {"0.937 & 1.042 & 1.121 MeV", "4.964 MeV", "3.062 MeV", "4.652 & 4.753 MeV", "4.360 MeV", "4.115 MeV", "3.724 & 3.839 MeV", "0.000 MeV"};
 
   std::vector<TGraph*> graphs;
 
@@ -182,7 +186,7 @@ void poster_angular_dist_17F_half_dets() {
   const auto& pot = potentials[0];
 
   TString filename = Form("DWBA_17F_%s.root", pot.Data());
-  TString outputDir = Form("plots_17F/minuit_new/ang_dist_newunc/%s", pot.Data());
+  TString outputDir = Form("plots_17F/minuit_new/ang_dist_newunc_opt1/%s", pot.Data());
   gSystem->mkdir(outputDir, kTRUE);
   
   if (checking_gs) {
@@ -221,24 +225,24 @@ void poster_angular_dist_17F_half_dets() {
   std::cout << "Mappings " << std::endl;
   
   fitMappings = {
-    {ex0937_1041_1121_half_dets, {25, 26, 27, 28}},
+    {ex0937_1041_1121_half_dets, {26, 28}},
     {ex4964_half_dets, {2, 3}},//, 11, 12}},
     {ex3061_half_dets, {5, 6}},
-    {ex4652_4753_half_dets, {29, 30}},
+    {ex4652_4753_half_dets, {29}},
     {ex4360_half_dets, {21}},
     {ex4115_half_dets, {20, 19}},
-    {ex3724_3839_half_dets, {24, 23, 22}},
-    {ex000_half_dets, {31}}
+    {ex3724_3839_half_dets, {24, 23}},
+    {ex000_half_dets, {39}}
   };
   fitPairs =  {
-    {{25, 26, 27, 28}},
+    {{26, 28}},
     {{2, 3}},
     {{5, 6}},
-    {{29, 30}},
+    {{29}},
     {{21}},
     {{20, 19}},
-    {{24, 23, 22}},
-    {{31}}
+    {{24, 23}},
+    {{39}}
   };
 
   std::vector<int> color = {629, 596, 418, 801, 905, 8, 9, 1};
@@ -291,7 +295,7 @@ void poster_angular_dist_17F_half_dets() {
     TCanvas* canvas = new TCanvas(Form("fit_canvas_%lu", mappingIndex + 1), 
 				  Form("Ex = %.3f MeV", Ex_values[mappingIndex]), 1400, 1400);
 
-    experimentGraph->Draw("APE1");
+    experimentGraph->Draw("APE1 SAME");
 
     experimentGraph->GetHistogram()->GetXaxis()->SetRangeUser(0, 60);
     experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(.01, 100);
@@ -301,7 +305,8 @@ void poster_angular_dist_17F_half_dets() {
     TAxis *axis = experimentGraph->GetXaxis();
     axis->SetLimits(0.,60.);
     
-    experimentGraph->SetTitle(Form("Ex = %.3f MeV;#theta_{CM} (deg);d#sigma/d#Omega (a. u.)", Ex_values[mappingIndex]));
+    //experimentGraph->SetTitle(Form("Ex = %.3f MeV;#theta_{CM} (deg);d#sigma/d#Omega (a. u.)", Ex_values[mappingIndex]));
+    experimentGraph->SetTitle(Form("%s;#theta_{CM} (deg);d#sigma/d#Omega (a. u.)", titles[mappingIndex].Data()));
 
     gPad->SetLeftMargin(0.15);   // więcej miejsca na tytuł osi Y
     gPad->SetBottomMargin(0.15); // więcej miejsca na tytuł osi X
@@ -361,7 +366,8 @@ void poster_angular_dist_17F_half_dets() {
       
       fitFunction->SetLineColor(color[ncolor]);
       fitFunction->SetLineWidth(4);
-      fitFunction->Draw("L SAME");
+      if (nr_of_functions > 1)
+	fitFunction->Draw("L SAME");
 
       if (nr_of_functions > 1)
 	legend->AddEntry(fitFunction, "Total fit", "l");
@@ -421,8 +427,11 @@ void poster_angular_dist_17F_half_dets() {
     //canvas->Update();
 
     legend->Draw();
+    experimentGraph->Draw("PE SAME");
 
     TString outputFilename = Form("%s/fit_Ex_%lu.png", outputDir.Data(), mappingIndex + 1);
+    canvas->SaveAs(outputFilename);
+    outputFilename = Form("%s/fit_Ex_%lu.pdf", outputDir.Data(), mappingIndex + 1);
     canvas->SaveAs(outputFilename);
   }
   
