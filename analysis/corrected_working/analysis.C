@@ -7,6 +7,7 @@ std::string folderName = "plots_" + isotope + "/";
 
 TString rdtCutFile = "rdtCuts_" + isotope + ".root";
 TString rdtCutFileDiff = "rdtCuts_17F_with_17O_recoils.root";
+TString rdtCutFileN = "rdtCuts_17F_N.root";
 TString saveFileHists = "rings_" + isotope + ".root";
 TString saveFileHistsHalfDets = "rings_" + isotope + "_half_dets.root";
 TString saveFileHistsStrictTC = "rings_" + isotope + "_200bins_strict_tc.root";
@@ -22,13 +23,15 @@ TString saveFileHistsHalfDets17OrecoilsMoreBins = "rings_17Fw17Orecoils_half_det
 
 TObjArray * cutList;
 TObjArray * cutListDiff;
-Bool_t isCutFileOpen, isCutFileOpenDiff;
-int numCut, numCutDiff;
+TObjArray * cutListN;
+Bool_t isCutFileOpen, isCutFileOpenDiff, isCutFileOpenN;
+int numCut, numCutDiff, numCutN;
 
 TCutG* cutG;
 
 bool rdtgate = false;
 bool diffrdtgate = false;
+bool Nrdtgate = false;
 bool xgate = false;
 bool cointimegate = false;
 bool strict_cointimegate = false;
@@ -128,6 +131,30 @@ void analysis(){
 	     ((TCutG*)cutListDiff->At(i))->GetVarX(),
 	     ((TCutG*)cutListDiff->At(i))->GetVarY(),
 	     ((TCutG*)cutListDiff->At(i))->GetN());
+    }
+  }
+
+  //================================= N rdt cut (17F with N recoils)
+
+  TFile * fCutN = new TFile(rdtCutFileN);
+  isCutFileOpenN = fCutN->IsOpen();
+  if(!isCutFileOpenN) {
+    printf( "Failed to open rdt-cutfile : %s\n" , rdtCutFileN.Data());
+    rdtCutFile = "";
+  }
+  numCutN = 0 ;
+
+  if( isCutFileOpenN ){
+    cutListN = (TObjArray *) fCutN->FindObjectAny("cutList");
+    numCutN = cutListN->GetEntries();
+    printf("=========== found %d cutG in %s \n", numCutN, fCutN->GetName());
+
+    for(int i = 0; i < numCutN ; i++){
+      printf("cut name : %s , VarX: %s, VarY: %s, numPoints: %d \n",
+	     cutListN->At(i)->GetName(),
+	     ((TCutG*)cutListN->At(i))->GetVarX(),
+	     ((TCutG*)cutListN->At(i))->GetVarY(),
+	     ((TCutG*)cutListN->At(i))->GetN());
     }
   }
 
@@ -254,6 +281,7 @@ void analysis(){
   TH2F* EZ_gated_3turns = new TH2F("EZ_gated_3turns", "e vs z, gated, 3 turns", 1000, -600, -200, 200, 0, 12);
 
   TH1F* x_diffrdt_coinTime_gatedEx = new TH1F("x_diffrdt_coinTime_gatedEx", "Ex gated on x, recoils and coinTime for another recoil cut", 200, -2, 12);
+  TH1F* x_Nrdt_coinTime_gatedEx = new TH1F("x_Nrdt_coinTime_gatedEx", "Ex gated on x, recoils and coinTime for N recoil cut", 200, -2, 12);
   
   std::vector<TH1F*> Ex_d; // Array to store histograms for Ex_d0, Ex_d1, ..., Ex_d5
   std::vector<TH1F*> Ex_d_morebins;
@@ -340,6 +368,7 @@ void analysis(){
   for (Long64_t i = 0; i < nEntries; i++) {
     rdtgate = false;
     diffrdtgate = false;
+    Nrdtgate = false;
     xgate = false;
     cointimegate = false;
     cointimegate_2turns = false;
@@ -364,6 +393,17 @@ void analysis(){
 	cutG = (TCutG *)cutListDiff->At(i) ;
 	if(cutG->IsInside(rdt[2*i],rdt[2*i+1])) {
 	  diffrdtgate = true;
+	  recoil_n = 2*i;
+	  break; /// only one is enough
+	}
+      }
+    }
+
+    if( isCutFileOpenN ){
+      for(int i = 0 ; i < numCutN ; i++ ){
+	cutG = (TCutG *)cutListN->At(i) ;
+	if(cutG->IsInside(rdt[2*i],rdt[2*i+1])) {
+	  Nrdtgate = true;
 	  recoil_n = 2*i;
 	  break; /// only one is enough
 	}
@@ -475,8 +515,8 @@ void analysis(){
 	EZ_gated_3turns->Fill(z[detID], e[detID]);
     }
 
-    if (xgate && diffrdtgate && cointimegate) {
-      x_diffrdt_coinTime_gatedEx->Fill(Ex);
+    if (xgate && Nrdtgate && cointimegate && !oxygen) {
+      x_Nrdt_coinTime_gatedEx->Fill(Ex);
     }
 
     if (xgate && diffrdtgate && cointimegate && !oxygen) {
@@ -656,6 +696,7 @@ void analysis(){
     }
 
     cRDT->SaveAs((folderName + "/RDT_DEE_gated.png").c_str());
+  
 
     TH1F *combinedHist = (TH1F*)correctedCoinTimeXgateRDTCoin[0]->Clone("combinedHist");
     combinedHist->Reset();
@@ -666,16 +707,26 @@ void analysis(){
     TCanvas *cCombined = new TCanvas("cCombined", "Combined Corrected CoinTime with recoil && x gate", 800, 600);
     combinedHist->Draw();
     cCombined->SaveAs((folderName + "/Combined_Corrected_CoinTime_XgateRDTCoin.png").c_str());
+    cCombined->SaveAs((folderName + "/Combined_Corrected_CoinTime_XgateRDTCoin.root").c_str());
 
     TCanvas *cGatedEx = new TCanvas("cGatedEx", "Ex gated on x, recoils and coinTime", 800, 600);
     x_rdt_coinTime_gatedEx->Draw();
     //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
     x_rdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.root").c_str());
 
+    TCanvas *cExnogates = new TCanvas("cExnogates", "Ex, no gates", 800, 600);
+    Ex_nogates->Draw();
+    cExnogates->SaveAs((folderName + "/Ex_nogates.root").c_str());
+
     TCanvas *cGatedExDiffRdt = new TCanvas("cGatedExDiffRdt", "Ex gated on x, recoils and coinTime, diff rdt", 800, 600);
     x_diffrdt_coinTime_gatedEx->Draw();
     //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
     x_diffrdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_diffrecoil_coinTime_gated.root").c_str());
+
+     TCanvas *cGatedExNRdt = new TCanvas("cGatedExNRdt", "Ex gated on x, recoils and coinTime, N rdt", 800, 600);
+    x_Nrdt_coinTime_gatedEx->Draw();
+    //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
+    x_Nrdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_Nrecoil_coinTime_gated.root").c_str());
 
     TCanvas *cRDTCoinTimeGatedEx = new TCanvas("cRDTCoinTimeGatedEx", "Ex gated on recoils and coinTime", 800, 600);
     rdt_coinTime_gatedEx->Draw();
@@ -688,10 +739,6 @@ void analysis(){
     TCanvas *cRDTGatedEx = new TCanvas("cRDTGatedEx", "Ex gated on rdt", 800, 600);
     rdt_gatedEx->Draw();
     cRDTGatedEx->SaveAs((folderName + "/Ex_rdt_gated.png").c_str());
-
-    TCanvas *cExnogates = new TCanvas("cExnogates", "Ex, no gates", 800, 600);
-    Ex_nogates->Draw();
-    cExnogates->SaveAs((folderName + "/Ex_nogates.png").c_str());
 
     TCanvas *cEZnogates = new TCanvas("cEZnogates", "e vs z, no gates", 800, 600);
     EZ_nogates->Draw();
@@ -724,6 +771,7 @@ void analysis(){
     }
 
     cExSingleDets->SaveAs((folderName + "/Ex_each_detector.png").c_str());
+    
   }
 
 }
