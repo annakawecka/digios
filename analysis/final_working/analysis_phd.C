@@ -14,7 +14,9 @@ TString saveFileHistsStrictTC = "rings_" + isotope + "_200bins_strict_tc.root";
 TString saveFileHistsSingle = "rings_" + isotope + "_single_dets.root";
 TString saveExHistsFile = "ex_hists_" + isotope + ".root";
 TString saveFileHists17Orecoils = "rings_17Fw17Orecoils.root";
+TString saveFileHists14Nrecoils = "rings_17Fw14Nrecoils.root";
 TString saveFileHistsHalfDets17Orecoils = "rings_17Fw17Orecoils_half_dets.root";
+TString saveFileHistsHalfDets14Nrecoils = "rings_17Fw14Nrecoils_half_dets.root";
 
 TString saveFileHistsMoreBins = "rings_" + isotope + "_morebins_up_line.root";
 TString saveFileHistsHalfDetsMoreBins = "rings_" + isotope + "_half_dets_morebins.root";
@@ -218,6 +220,30 @@ void analysis_phd(){
     }
   }
 
+  //================================= N rdt cut (17F with N recoils)
+
+  TFile * fCutN = new TFile(rdtCutFileN);
+  isCutFileOpenN = fCutN->IsOpen();
+  if(!isCutFileOpenN) {
+    printf( "Failed to open rdt-cutfile : %s\n" , rdtCutFileN.Data());
+    rdtCutFile = "";
+  }
+  numCutN = 0 ;
+
+  if( isCutFileOpenN ){
+    cutListN = (TObjArray *) fCutN->FindObjectAny("cutList");
+    numCutN = cutListN->GetEntries();
+    printf("=========== found %d cutG in %s \n", numCutN, fCutN->GetName());
+
+    for(int i = 0; i < numCutN ; i++){
+      printf("cut name : %s , VarX: %s, VarY: %s, numPoints: %d \n",
+	     cutListN->At(i)->GetName(),
+	     ((TCutG*)cutListN->At(i))->GetVarX(),
+	     ((TCutG*)cutListN->At(i))->GetVarY(),
+	     ((TCutG*)cutListN->At(i))->GetN());
+    }
+  }
+
   //========================================= detector Geometry
   printf("======================= loading parameters files .... \n");
   std::string detGeoFileName = "detectorGeo.txt";
@@ -355,8 +381,10 @@ void analysis_phd(){
   std::vector<TH1F*> Ex_single_rdt2;
   std::vector<TH1F*> Ex_single_rdt3;
   std::vector<TH1F*> Ex_d_17Fw17Orecoils; // Array to store histograms for Ex_d0, Ex_d1, ..., Ex_d5
+  std::vector<TH1F*> Ex_d_17Fw14Nrecoils;
   std::vector<TH1F*> Ex_d_17Fw17Orecoils_morebins;
   std::vector<TH1F*> Ex_d_half_dets_17Fw17Orecoils;
+  std::vector<TH1F*> Ex_d_half_dets_17Fw14Nrecoils;
   std::vector<TH1F*> Ex_d_half_dets_17Fw17Orecoils_morebins;
   
   printf("Before initialising Ex_d histograms\n");
@@ -369,6 +397,8 @@ void analysis_phd(){
     Ex_d_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
     histName.Form("Ex_d%d_17Orecoil", i);
     Ex_d_17Fw17Orecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
+    histName.Form("Ex_d%d_14Nrecoil", i);
+    Ex_d_17Fw14Nrecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_17Orecoil_morebins", i);
     Ex_d_17Fw17Orecoils_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
     histName.Form("Ex_d%d_strict_tc", i);
@@ -381,6 +411,8 @@ void analysis_phd(){
     Ex_d_half_dets.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_half_dets_17Orecoil", i);
     Ex_d_half_dets_17Fw17Orecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
+    histName.Form("Ex_d%d_half_dets_14Nrecoil", i);
+    Ex_d_half_dets_17Fw14Nrecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_half_dets_morebins", i);
     Ex_d_half_dets_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
     histName.Form("Ex_d%d_half_dets_17Orecoil_morebins", i);
@@ -445,6 +477,7 @@ void analysis_phd(){
     rdtgate2 = false;
     rdtgate3 = false;
     diffrdtgate = false;
+    Nrdtgate = false;
     xgate = false;
     cointimegate = false;
     cointimegate_2turns = false;
@@ -621,7 +654,20 @@ void analysis_phd(){
 
     if (xgate && Nrdtgate && cointimegate && !oxygen) {
       x_Nrdt_coinTime_gatedEx->Fill(Ex);
+
+      Ex_d_17Fw14Nrecoils[detID % 6]->Fill(Ex);
+
+      for (size_t ii = 0; ii < pos_half.size(); ii++) {
+	double z_start = pos_half[ii] - 25.;
+	double z_end = (ii + 1 < pos_half.size()) ? pos_half[ii] : -220.;
+
+	if (z[detID] >= z_start && z[detID] < z_end) {
+	  Ex_d_half_dets_17Fw14Nrecoils[ii]->Fill(Ex);
+	  break;
+	}
+      }
     }
+    
    
     if (xgate && diffrdtgate && cointimegate && !oxygen) {
       x_diffrdt_coinTime_gatedEx->Fill(Ex);
@@ -689,12 +735,26 @@ void analysis_phd(){
 
     outputFile17Orecoils->Close();
 
+    TFile* outputFile14Nrecoils = new TFile(saveFileHists14Nrecoils, "RECREATE");
+
+    for (int ii = 0; ii < 6; ++ii)
+      Ex_d_17Fw14Nrecoils[ii]->Write();
+
+    outputFile14Nrecoils->Close();
+
     TFile* outputFileHalfDets17Orecoils = new TFile(saveFileHistsHalfDets17Orecoils, "RECREATE");
 
     for (int ii = 0; ii < 12; ++ii)
       Ex_d_half_dets_17Fw17Orecoils[ii]->Write();
 
     outputFileHalfDets17Orecoils->Close();
+
+    TFile* outputFileHalfDets14Nrecoils = new TFile(saveFileHistsHalfDets14Nrecoils, "RECREATE");
+
+    for (int ii = 0; ii < 12; ++ii)
+      Ex_d_half_dets_17Fw14Nrecoils[ii]->Write();
+
+    outputFileHalfDets14Nrecoils->Close();
 
     TFile* outputFile17OrecoilsMoreBins = new TFile(saveFileHists17OrecoilsMoreBins, "RECREATE");
 
