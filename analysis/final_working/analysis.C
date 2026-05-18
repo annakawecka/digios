@@ -14,11 +14,9 @@ TString saveFileHistsStrictTC = "rings_" + isotope + "_200bins_strict_tc.root";
 TString saveFileHistsSingle = "rings_" + isotope + "_single_dets.root";
 TString saveExHistsFile = "ex_hists_" + isotope + ".root";
 TString saveFileHists17Orecoils = "rings_17Fw17Orecoils.root";
-TString saveFileHists14Nrecoils = "rings_17Fw14Nrecoils.root";
 TString saveFileHistsHalfDets17Orecoils = "rings_17Fw17Orecoils_half_dets.root";
-TString saveFileHistsHalfDets14Nrecoils = "rings_17Fw14Nrecoils_half_dets.root";
 
-TString saveFileHistsMoreBins = "rings_" + isotope + "_morebins_up_line.root";
+TString saveFileHistsMoreBins = "rings_" + isotope + "_morebins.root";
 TString saveFileHistsHalfDetsMoreBins = "rings_" + isotope + "_half_dets_morebins.root";
 TString saveFileHists17OrecoilsMoreBins = "rings_17Fw17Orecoils_morebins.root";
 TString saveFileHistsHalfDets17OrecoilsMoreBins = "rings_17Fw17Orecoils_half_dets_morebins.root";
@@ -32,10 +30,6 @@ int numCut, numCutDiff, numCutN;
 TCutG* cutG;
 
 bool rdtgate = false;
-bool rdtgate0 = false;
-bool rdtgate1 = false;
-bool rdtgate2 = false;
-bool rdtgate3 = false;
 bool diffrdtgate = false;
 bool Nrdtgate = false;
 bool xgate = false;
@@ -80,115 +74,10 @@ int countIn[24];
 
 std::ifstream file;
 
-void SetThesisStyle() {
-  gStyle->SetOptStat(0);                 // Hide stat box
-  gStyle->SetOptFit(0);                  // Hide fit box unless wanted
+void analysis(){
 
-  gStyle->SetPalette(kRainBow);          // Nicer color palette (choose one)
-
-  // Canvas
-  gStyle->SetCanvasColor(0);
-  gStyle->SetCanvasBorderMode(0);
-
-  // Pads
-  gStyle->SetPadColor(0);
-  gStyle->SetPadBorderMode(0);
-  gStyle->SetPadTickX(1);
-  gStyle->SetPadTickY(1);
-
-  // Frame
-  gStyle->SetFrameLineWidth(1);
-  gStyle->SetFrameBorderMode(0);
-
-  // Fonts
-  gStyle->SetTextFont(42);               // Helvetica (thesis-friendly)
-  gStyle->SetLabelFont(42,"XYZ");
-  gStyle->SetTitleFont(42,"XYZ");
-  gStyle->SetTitleSize(0.05,"XYZ");
-  gStyle->SetLabelSize(0.045,"XYZ");
-
-  // Margins
-  gStyle->SetPadTopMargin(0.1);
-  gStyle->SetPadBottomMargin(0.13);
-  gStyle->SetPadLeftMargin(0.14);
-  gStyle->SetPadRightMargin(0.05);
-
-  // Marker & line styles
-  gStyle->SetLineWidth(2);
-  gStyle->SetMarkerStyle(20);
-  gStyle->SetMarkerSize(0.25);
-
-  gStyle->SetImageScaling(3.0);
-}
-
-void StyleHistogram(TH1 *h, const char *mainTitle,
-                    const char *xTitle, const char *yTitle, int width = 2, bool logZ = false)
-{
-    if (!h) return;
-
-    h->GetXaxis()->SetTitle(xTitle);
-    h->GetYaxis()->SetTitle(yTitle);
-    h->SetTitle("");
-
-    h->SetLineWidth(width);
-
-    h->GetXaxis()->SetTitleSize(0.045);
-    h->GetYaxis()->SetTitleSize(0.045);
-    h->GetXaxis()->SetLabelSize(0.037);
-    h->GetYaxis()->SetLabelSize(0.037);
-    h->GetXaxis()->SetTickLength(0.02);
-    h->GetYaxis()->SetTickLength(0.02);
-
-    h->GetXaxis()->SetTitleOffset(1.25);
-    h->GetYaxis()->SetTitleOffset(1.35);
-    h->GetXaxis()->SetLabelOffset(0.02);
-    h->GetYaxis()->SetLabelOffset(0.02);
-
-    gPad->SetLeftMargin(0.15);
-    gPad->SetBottomMargin(0.12);
-    gPad->SetRightMargin(0.1);
-    gPad->SetTopMargin(0.05);
-
-    //h->GetXaxis()->SetNdivisions(505);
-    //h->GetYaxis()->SetNdivisions(505);
-
-    gPad->SetTopMargin(0.12);
-
-    TLatex *latex = new TLatex();
-    latex->SetTextFont(42);
-    latex->SetTextSize(0.05);
-    latex->SetTextAlign(22);
-    latex->DrawLatexNDC(0.5, 0.95, mainTitle);
-
-    if (h->InheritsFrom(TH2::Class())) {
-      if (logZ) {
-	gPad->SetLogz();
-	h->SetMinimum(0.5);
-      }
-      gPad->SetRightMargin(0.16);
-
-      h->GetZaxis()->SetTitleSize(0.045);
-      h->GetZaxis()->SetLabelSize(0.037);
-      h->GetZaxis()->SetTickLength(0.02);
-
-      h->GetZaxis()->SetTitleOffset(1.25);
-      h->GetZaxis()->SetLabelOffset(0.02);
-
-      h->GetZaxis()->SetTitle("Counts per 60 keV per 1 mm");
-    
-      h->Draw("COLZ");
-    }
-    else {
-      gPad->SetLogz(0);
-      h->SetLineWidth(2);
-      h->Draw("HIST");
-    }
-}
-
-
-void analysis_phd(){
-
-  SetThesisStyle();
+  for (int i = 0; i < 24; i++)
+    countIn[i] = 0;
   
   //================================= coinTime fit parameters
 
@@ -389,12 +278,11 @@ void analysis_phd(){
   TH1F* coinTime_gatedEx = new TH1F("coinTime_gatedEx", "Ex gated on coinTime", 200, -2, 12);
   TH1F* rdt_gatedEx = new TH1F("rdt_gatedEx", "Ex gated on recoils", 200, -2, 12);
   TH1F* Ex_nogates = new TH1F("Ex_nogates", "Ex, no gates", 200, -2, 12);
-  TH2F* EZ_nogates = new TH2F("EZ_nogates", "e vs z, no gates", 800, -600, -200, 200, 0, 12);
-  TH2F* EZ_nogates_without0 = new TH2F("EZ_nogates_without0", "e vs z, no gates", 800, -600, -200, 200, 0, 12);
-  TH2F* EZ_gated = new TH2F("EZ_gated", "e vs z, gated", 800, -600, -200, 200, 0, 12);
-  TH2F* EZ_gated_without0 = new TH2F("EZ_gated_without0", "e vs z, gated", 800, -600, -200, 200, 0, 12);
-  TH2F* EZ_gated_2turns = new TH2F("EZ_gated_2turns", "e vs z, gated, 2 turns", 800, -600, -200, 200, 0, 12);
-  TH2F* EZ_gated_3turns = new TH2F("EZ_gated_3turns", "e vs z, gated, 3 turns", 800, -600, -200, 200, 0, 12);
+  TH2F* EZ_nogates = new TH2F("EZ_nogates", "e vs z, no gates", 1000, -600, -200, 200, 0, 12);
+  TH2F* EZ_gated = new TH2F("EZ_gated", "e vs z, gated", 1000, -600, -200, 200, 0, 12);
+  TH2F* EZ_gated_without0 = new TH2F("EZ_gated_without0", "e vs z, gated", 1000, -600, -200, 200, 0, 12);
+  TH2F* EZ_gated_2turns = new TH2F("EZ_gated_2turns", "e vs z, gated, 2 turns", 1000, -600, -200, 200, 0, 12);
+  TH2F* EZ_gated_3turns = new TH2F("EZ_gated_3turns", "e vs z, gated, 3 turns", 1000, -600, -200, 200, 0, 12);
 
   TH1F* x_diffrdt_coinTime_gatedEx = new TH1F("x_diffrdt_coinTime_gatedEx", "Ex gated on x, recoils and coinTime for another recoil cut", 200, -2, 12);
   TH1F* x_Nrdt_coinTime_gatedEx = new TH1F("x_Nrdt_coinTime_gatedEx", "Ex gated on x, recoils and coinTime for N recoil cut", 200, -2, 12);
@@ -405,15 +293,9 @@ void analysis_phd(){
   std::vector<TH1F*> Ex_d_half_dets_morebins;
   std::vector<TH1F*> Ex_d_strict_tc;
   std::vector<TH1F*> Ex_single; // Array to store histograms for Ex for all detectors individually
-  std::vector<TH1F*> Ex_single_rdt0;
-  std::vector<TH1F*> Ex_single_rdt1;
-  std::vector<TH1F*> Ex_single_rdt2;
-  std::vector<TH1F*> Ex_single_rdt3;
   std::vector<TH1F*> Ex_d_17Fw17Orecoils; // Array to store histograms for Ex_d0, Ex_d1, ..., Ex_d5
-  std::vector<TH1F*> Ex_d_17Fw14Nrecoils;
   std::vector<TH1F*> Ex_d_17Fw17Orecoils_morebins;
   std::vector<TH1F*> Ex_d_half_dets_17Fw17Orecoils;
-  std::vector<TH1F*> Ex_d_half_dets_17Fw14Nrecoils;
   std::vector<TH1F*> Ex_d_half_dets_17Fw17Orecoils_morebins;
   
   printf("Before initialising Ex_d histograms\n");
@@ -426,8 +308,6 @@ void analysis_phd(){
     Ex_d_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
     histName.Form("Ex_d%d_17Orecoil", i);
     Ex_d_17Fw17Orecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
-    histName.Form("Ex_d%d_14Nrecoil", i);
-    Ex_d_17Fw14Nrecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_17Orecoil_morebins", i);
     Ex_d_17Fw17Orecoils_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
     histName.Form("Ex_d%d_strict_tc", i);
@@ -440,8 +320,6 @@ void analysis_phd(){
     Ex_d_half_dets.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_half_dets_17Orecoil", i);
     Ex_d_half_dets_17Fw17Orecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
-    histName.Form("Ex_d%d_half_dets_14Nrecoil", i);
-    Ex_d_half_dets_17Fw14Nrecoils.push_back(new TH1F(histName, histName, 200, -2, 12));
     histName.Form("Ex_d%d_half_dets_morebins", i);
     Ex_d_half_dets_morebins.push_back(new TH1F(histName, histName, 600, -2, 12));
     histName.Form("Ex_d%d_half_dets_17Orecoil_morebins", i);
@@ -453,23 +331,15 @@ void analysis_phd(){
   for (int i = 0; i < numDet; ++i) {
     TString histName;
     histName.Form("corrected_coinTime_det%d", i);
-    correctedCoinTime.push_back(new TH1F(histName, histName, 300, -100, 200));
+    correctedCoinTime.push_back(new TH1F(histName, histName, 400, -100, 200));
     histName.Form("corrected_coinTime_det%d_x_gate", i);
-    correctedCoinTimeXgate.push_back(new TH1F(histName, histName, 300, -100, 200));
+    correctedCoinTimeXgate.push_back(new TH1F(histName, histName, 400, -100, 200));
     histName.Form("corrected_coinTime_det%d_rdt_coincidence", i);
-    correctedCoinTimeRDTCoin.push_back(new TH1F(histName, histName, 300, -100, 200));
+    correctedCoinTimeRDTCoin.push_back(new TH1F(histName, histName, 400, -100, 200));
     histName.Form("corrected_coinTime_det%d_x_gate_rdt_coincidence", i);
-    correctedCoinTimeXgateRDTCoin.push_back(new TH1F(histName, histName, 300, -100, 200));
+    correctedCoinTimeXgateRDTCoin.push_back(new TH1F(histName, histName, 400, -100, 200));
     histName.Form("Ex_single_det%d", i);
     Ex_single.push_back(new TH1F(histName, histName, 200, -2, 12));
-    histName.Form("Ex_single_det%d_rdt0", i);
-    Ex_single_rdt0.push_back(new TH1F(histName, histName, 200, -2, 12));
-    histName.Form("Ex_single_det%d_rdt1", i);
-    Ex_single_rdt1.push_back(new TH1F(histName, histName, 200, -2, 12));
-    histName.Form("Ex_single_det%d_rdt2", i);
-    Ex_single_rdt2.push_back(new TH1F(histName, histName, 200, -2, 12));
-    histName.Form("Ex_single_det%d_rdt3", i);
-    Ex_single_rdt3.push_back(new TH1F(histName, histName, 200, -2, 12));
   }
 
   for (int i = 0; i < 4; ++i) {
@@ -501,10 +371,6 @@ void analysis_phd(){
   Long64_t nEntries = chain->GetEntries();
   for (Long64_t i = 0; i < nEntries; i++) {
     rdtgate = false;
-    rdtgate0 = false;
-    rdtgate1 = false;
-    rdtgate2 = false;
-    rdtgate3 = false;
     diffrdtgate = false;
     Nrdtgate = false;
     xgate = false;
@@ -522,22 +388,6 @@ void analysis_phd(){
 	  rdtgate = true;
 	  recoil_n = 2*i;
 	  break; /// only one is enough
-	}
-      }
-    }
-
-    if( isCutFileOpen ){
-      for(int i = 0 ; i < numCut ; i++ ){
-	cutG = (TCutG *)cutList->At(i) ;
-	if(cutG->IsInside(rdt[2*i],rdt[2*i+1])) {
-	  if (i == 0)
-	    rdtgate0 = true;
-	  if (i == 1)
-	    rdtgate1 = true;
-	  if (i == 2)
-	    rdtgate2 = true;
-	  if (i == 3)
-	    rdtgate3 = true;
 	}
       }
     }
@@ -584,9 +434,6 @@ void analysis_phd(){
 
     EZ_nogates->Fill(z[detID], e[detID]);
 
-    if (!(detID == 0))
-      EZ_nogates_without0->Fill(z[detID], e[detID]);
-
     if (coinTimeCorr > -20 && coinTimeCorr < 15) {
       cointimegate = true;
 
@@ -632,15 +479,6 @@ void analysis_phd(){
 
 	Ex_single[detID]->Fill(Ex);
 
-	if (rdtgate0)
-	  Ex_single_rdt0[detID]->Fill(Ex);
-	if (rdtgate1)
-	  Ex_single_rdt1[detID]->Fill(Ex);
-	if (rdtgate2)
-	  Ex_single_rdt2[detID]->Fill(Ex);
-	if (rdtgate3)
-	  Ex_single_rdt3[detID]->Fill(Ex);
-
 	EZ_gated->Fill(z[detID], e[detID]);
 
 	if (!(detID == 0))
@@ -683,21 +521,8 @@ void analysis_phd(){
 
     if (xgate && Nrdtgate && cointimegate && !oxygen) {
       x_Nrdt_coinTime_gatedEx->Fill(Ex);
-
-      Ex_d_17Fw14Nrecoils[detID % 6]->Fill(Ex);
-
-      for (size_t ii = 0; ii < pos_half.size(); ii++) {
-	double z_start = pos_half[ii] - 25.;
-	double z_end = (ii + 1 < pos_half.size()) ? pos_half[ii] : -220.;
-
-	if (z[detID] >= z_start && z[detID] < z_end) {
-	  Ex_d_half_dets_17Fw14Nrecoils[ii]->Fill(Ex);
-	  break;
-	}
-      }
     }
-    
-   
+
     if (xgate && diffrdtgate && cointimegate && !oxygen) {
       x_diffrdt_coinTime_gatedEx->Fill(Ex);
 
@@ -726,7 +551,6 @@ void analysis_phd(){
   printf("Individual sides:\n0:\t%d\t1:\t%d\t2:\t%d\t3:\t%d\t4:\t%d\t5:\t%d\n6:\t%d\t7:\t%d\t8:\t%d\t9:\t%d\t10:\t%d\t11:\t%d\n12:\t%d\t13:\t%d\t14:\t%d\t15:\t%d\t16:\t%d\t17:\t%d\n18:\t%d\t19:\t%d\t20:\t%d\t21:\t%d\t22:\t%d\t23:\t%d\n", countIn[0], countIn[1], countIn[2], countIn[3], countIn[4], countIn[5], countIn[6], countIn[7], countIn[8], countIn[9], countIn[10], countIn[11], countIn[12], countIn[13], countIn[14], countIn[15], countIn[16], countIn[17], countIn[18], countIn[19], countIn[20], countIn[21], countIn[22], countIn[23]);
 
   //================================= saving histograms to a root file
-  
 
   TFile* outputFile = new TFile(saveFileHists, "RECREATE");
 
@@ -764,26 +588,12 @@ void analysis_phd(){
 
     outputFile17Orecoils->Close();
 
-    TFile* outputFile14Nrecoils = new TFile(saveFileHists14Nrecoils, "RECREATE");
-
-    for (int ii = 0; ii < 6; ++ii)
-      Ex_d_17Fw14Nrecoils[ii]->Write();
-
-    outputFile14Nrecoils->Close();
-
     TFile* outputFileHalfDets17Orecoils = new TFile(saveFileHistsHalfDets17Orecoils, "RECREATE");
 
     for (int ii = 0; ii < 12; ++ii)
       Ex_d_half_dets_17Fw17Orecoils[ii]->Write();
 
     outputFileHalfDets17Orecoils->Close();
-
-    TFile* outputFileHalfDets14Nrecoils = new TFile(saveFileHistsHalfDets14Nrecoils, "RECREATE");
-
-    for (int ii = 0; ii < 12; ++ii)
-      Ex_d_half_dets_17Fw14Nrecoils[ii]->Write();
-
-    outputFileHalfDets14Nrecoils->Close();
 
     TFile* outputFile17OrecoilsMoreBins = new TFile(saveFileHists17OrecoilsMoreBins, "RECREATE");
 
@@ -819,21 +629,15 @@ void analysis_phd(){
 
     printf("Start of fitting\n");
 
-    TCanvas *cExdet = new TCanvas("cExdet", "Ex for different detector rings", 1000, 600);
+    TCanvas *cExdet = new TCanvas("cExdet", "Ex for different detector rings", 1000, 800);
     cExdet->Divide(3, 2);
 
     for (int i = 0; i < 6; ++i) {
       cExdet->cd(i + 1);
       Ex_d[i]->Draw();
-      StyleHistogram(Ex_d[i],
-		     Form("E_{x}, ring %d", i),
-		     Form("E_{x} (MeV)"),
-		     Form("Counts / 70 keV"),
-		     1);
     }
 
     cExdet->SaveAs((folderName + "/Ex_for_rings.png").c_str());
-    cExdet->SaveAs((folderName + "/Ex_for_rings.pdf").c_str());
 
     //for (int detectorId = 0; detectorId <= 5; detectorId++) {
     //  fitSpectra(Ex_d[detectorId], detectorId);
@@ -851,63 +655,39 @@ void analysis_phd(){
     for (int i = 0; i < numDet; ++i) {
       cAllDetectors->cd(i + 1);
       correctedCoinTime[i]->Draw();
-      StyleHistogram(correctedCoinTime[i],
-		     Form("Detector %d", i),
-		     Form("coincidence time (ns)"),
-		     Form("Counts / 1 ns"),
-		     1);
     }
 
     cAllDetectors->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors.png").c_str());
-    cAllDetectors->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors.pdf").c_str());
 
-    TCanvas *cAllDetectorsXgate = new TCanvas("cAllDetectorsXgate", "Corrected coincidence time for All Detectors with x gate", 1200, 800);
+    TCanvas *cAllDetectorsXgate = new TCanvas("cAllDetectorsXgate", "Corrected CoinTime for All Detectors with x gate", 1200, 800);
     cAllDetectorsXgate->Divide(6, 4);
 
     for (int i = 0; i < numDet; ++i) {
       cAllDetectorsXgate->cd(i + 1);
       correctedCoinTimeXgate[i]->Draw();
-      StyleHistogram(correctedCoinTimeXgate[i],
-		     Form("Detector %d", i),
-		     Form("coincidence time (ns)"),
-		     Form("Counts / 1 ns"),
-		     1);
     }
 
     cAllDetectorsXgate->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_Xgate.png").c_str());
-    cAllDetectorsXgate->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_Xgate.pdf").c_str());
 
-    TCanvas *cAllDetectorsRDT = new TCanvas("cAllDetectorsRDT", "Corrected coincidence time for All Detectors (RDT coin)", 1200, 800);
+    TCanvas *cAllDetectorsRDT = new TCanvas("cAllDetectorsRDT", "Corrected CoinTime for All Detectors (RDT coin)", 1200, 800);
     cAllDetectorsRDT->Divide(6, 4);
 
     for (int i = 0; i < numDet; ++i) {
       cAllDetectorsRDT->cd(i + 1);
       correctedCoinTimeRDTCoin[i]->Draw();
-      StyleHistogram(correctedCoinTimeRDTCoin[i],
-		     Form("Detector %d", i),
-		     Form("coincidence time (ns)"),
-		     Form("Counts / 1 ns"),
-		     1);
     }
 
     cAllDetectorsRDT->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_RDTCoin.png").c_str());
-    cAllDetectorsRDT->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_RDTCoin.pdf").c_str());
 
-    TCanvas *cAllDetectorsXgateRDT = new TCanvas("cAllDetectorsXgateRDT", "Corrected coincidence time for All Detectors (RDT coin && x gate)", 1200, 800);
+    TCanvas *cAllDetectorsXgateRDT = new TCanvas("cAllDetectorsXgateRDT", "Corrected CoinTime for All Detectors (RDT coin && x gate)", 1200, 800);
     cAllDetectorsXgateRDT->Divide(6, 4);
 
     for (int i = 0; i < numDet; ++i) {
       cAllDetectorsXgateRDT->cd(i + 1);
       correctedCoinTimeXgateRDTCoin[i]->Draw();
-      StyleHistogram(correctedCoinTimeXgateRDTCoin[i],
-		     Form("Detector %d", i),
-		     Form("coinTime (ns)"),
-		     Form("Counts / 1 ns"),
-		     1);
     }
 
     cAllDetectorsRDT->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_XgateRDTCoin.png").c_str());
-    cAllDetectorsRDT->SaveAs((folderName + "/Corrected_CoinTime_AllDetectors_XgateRDTCoin.pdf").c_str());
 
     std::cout << "coin: " << n_coin << " coin_rdt: " << n_coin_rdt << std::endl;
 
@@ -930,257 +710,61 @@ void analysis_phd(){
 
     TCanvas *cCombined = new TCanvas("cCombined", "Combined Corrected CoinTime with recoil && x gate", 800, 600);
     combinedHist->Draw();
-    StyleHistogram(combinedHist,
-		   Form("Corrected coincidence time"),
-		   Form("time difference (ns)"),
-		   Form("Counts / 1 ns"));
     cCombined->SaveAs((folderName + "/Combined_Corrected_CoinTime_XgateRDTCoin.png").c_str());
-    cCombined->SaveAs((folderName + "/Combined_Corrected_CoinTime_XgateRDTCoin.pdf").c_str());
     cCombined->SaveAs((folderName + "/Combined_Corrected_CoinTime_XgateRDTCoin.root").c_str());
-    
 
     TCanvas *cGatedEx = new TCanvas("cGatedEx", "Ex gated on x, recoils and coinTime", 800, 600);
     x_rdt_coinTime_gatedEx->Draw();
-    StyleHistogram(x_rdt_coinTime_gatedEx,
-		   Form("E_{x} spectrum, gated on position, RDT and coincidence time"),
-		   Form("E_{x} (MeV)"),
-		   Form("Counts / 70 keV"));
-    if (oxygen == false){
-      gPad->Update();
-      double x_line = 5.6071; // 5.6 MeV
-      double y_min = gPad->GetUymin();
-      double y_max = gPad->GetUymax();
-
-      TLine *vline = new TLine(x_line, y_min, x_line, y_max);
-      vline->SetLineColor(kBlack);
-      vline->SetLineStyle(2); // kreskowana
-      vline->SetLineWidth(4);
-      vline->Draw("same");
-
-      TLatex *label = new TLatex(
-				 x_line + 0.15,              // small x-offset to avoid overlap
-				 y_max * 0.85,               // near top of spectrum
-				 "S_{p}(^{18}F)"
-				 );
-
-      label->SetTextFont(42);
-      label->SetTextSize(0.04);
-      label->SetTextColor(kBlack);
-      label->SetTextAlign(12);        // left, vertically centered
-      label->Draw();
-    }
-    cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
-    cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.pdf").c_str());
+    //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
     x_rdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.root").c_str());
+
+    TCanvas *cExnogates = new TCanvas("cExnogates", "Ex, no gates", 800, 600);
+    Ex_nogates->Draw();
+    cExnogates->SaveAs((folderName + "/Ex_nogates.root").c_str());
 
     TCanvas *cGatedExDiffRdt = new TCanvas("cGatedExDiffRdt", "Ex gated on x, recoils and coinTime, diff rdt", 800, 600);
     x_diffrdt_coinTime_gatedEx->Draw();
-    StyleHistogram(x_diffrdt_coinTime_gatedEx,
-		   Form("E_{x} spectrum, gated on position, RDT and coincidence time"),
-		   Form("E_{x} (MeV)"),
-		   Form("Counts / 70 keV"));
-    
-    if (oxygen == false){
-      gPad->Update();
-      double x_line = 5.6071; // 5.6 MeV
-      double y_min = gPad->GetUymin();
-      double y_max = gPad->GetUymax();
-
-      TLine *vline = new TLine(x_line, y_min, x_line, y_max);
-      vline->SetLineColor(kBlack);
-      vline->SetLineStyle(2); // kreskowana
-      vline->SetLineWidth(4);
-      vline->Draw("same");
-
-      TLatex *label = new TLatex(
-				 x_line - 1.6,              // small x-offset to avoid overlap
-				 y_max * 0.85,               // near top of spectrum
-				 "S_{p}(^{18}F)"
-				 );
-
-      label->SetTextFont(42);
-      label->SetTextSize(0.04);
-      label->SetTextColor(kBlack);
-      label->SetTextAlign(12);        // left, vertically centered
-      label->Draw();
-    }
-    cGatedExDiffRdt->SaveAs((folderName + "/Ex_x_diffrecoil_coinTime_gated.png").c_str());
-    cGatedExDiffRdt->SaveAs((folderName + "/Ex_x_diffrecoil_coinTime_gated.pdf").c_str());
+    //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
     x_diffrdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_diffrecoil_coinTime_gated.root").c_str());
 
-    TCanvas *cGatedExNRdt = new TCanvas("cGatedExNRdt", "Ex gated on x, recoils and coinTime, N rdt", 800, 600);
+     TCanvas *cGatedExNRdt = new TCanvas("cGatedExNRdt", "Ex gated on x, recoils and coinTime, N rdt", 800, 600);
     x_Nrdt_coinTime_gatedEx->Draw();
-    StyleHistogram(x_Nrdt_coinTime_gatedEx,
-		   Form("E_{x} spectrum, gated on position, RDT and coincidence time"),
-		   Form("E_{x} (MeV)"),
-		   Form("Counts / 70 keV"));
-    if (oxygen == false){
-      gPad->Update();
-      double x_line = 4.415; // 5.6 MeV
-      double y_min = gPad->GetUymin();
-      double y_max = gPad->GetUymax();
-
-      TLine *vline = new TLine(x_line, y_min, x_line, y_max);
-      vline->SetLineColor(kBlack);
-      vline->SetLineStyle(2); // kreskowana
-      vline->SetLineWidth(4);
-      vline->Draw("same");
-
-      TLatex *label = new TLatex(
-				 x_line - 1.6,              // small x-offset to avoid overlap
-				 y_max * 0.85,               // near top of spectrum
-				 "Q_{#alpha}(^{18}F)"
-				 );
-
-      label->SetTextFont(42);
-      label->SetTextSize(0.04);
-      label->SetTextColor(kBlack);
-      label->SetTextAlign(12);        // left, vertically centered
-      label->Draw();
-    }
-    cGatedExNRdt->SaveAs((folderName + "/Ex_x_Nrecoil_coinTime_gated.png").c_str());
-    cGatedExNRdt->SaveAs((folderName + "/Ex_x_Nrecoil_coinTime_gated.pdf").c_str());
+    //cGatedEx->SaveAs((folderName + "/Ex_x_recoil_coinTime_gated.png").c_str());
     x_Nrdt_coinTime_gatedEx->SaveAs((folderName + "/Ex_x_Nrecoil_coinTime_gated.root").c_str());
 
     TCanvas *cRDTCoinTimeGatedEx = new TCanvas("cRDTCoinTimeGatedEx", "Ex gated on recoils and coinTime", 800, 600);
     rdt_coinTime_gatedEx->Draw();
-    StyleHistogram(rdt_coinTime_gatedEx,
-		   Form("E_{x} spectrum, gated on RDT and coincidence time"),
-		   Form("E_{x} (MeV)"),
-		   Form("Counts / 70 keV"));
-    if (oxygen == false){
-      gPad->Update();
-      double x_line = 5.6071; // 5.6 MeV
-      double y_min = gPad->GetUymin();
-      double y_max = gPad->GetUymax();
-
-      TLine *vline = new TLine(x_line, y_min, x_line, y_max);
-      vline->SetLineColor(kBlack);
-      vline->SetLineStyle(2); // kreskowana
-      vline->SetLineWidth(4);
-      vline->Draw("same");
-
-       TLatex *label = new TLatex(
-				 x_line + 0.15,              // small x-offset to avoid overlap
-				 y_max * 0.85,               // near top of spectrum
-				 "S_{p}(^{18}F)"
-				 );
-
-      label->SetTextFont(42);
-      label->SetTextSize(0.04);
-      label->SetTextColor(kBlack);
-      label->SetTextAlign(12);        // left, vertically centered
-      label->Draw();
-    }
     cRDTCoinTimeGatedEx->SaveAs((folderName + "/Ex_recoil_coinTime_gated.png").c_str());
-    cRDTCoinTimeGatedEx->SaveAs((folderName + "/Ex_recoil_coinTime_gated.pdf").c_str());
 
     TCanvas *cCoinTimeGatedEx = new TCanvas("cCoinTimeGatedEx", "Ex gated on coinTime", 800, 600);
     coinTime_gatedEx->Draw();
-    StyleHistogram(coinTime_gatedEx,
-		   Form("E_{x} spectrum, gated on coincidence time"),
-		   Form("E_{x} (MeV)"),
-		   Form("Counts / 70 keV"));
-    if (oxygen == false){
-      gPad->Update();
-      double x_line = 5.6071; // 5.6 MeV
-      double y_min = gPad->GetUymin();
-      double y_max = gPad->GetUymax();
-
-      TLine *vline = new TLine(x_line, y_min, x_line, y_max);
-      vline->SetLineColor(kBlack);
-      vline->SetLineStyle(2); // kreskowana
-      vline->SetLineWidth(4);
-      vline->Draw("same");
-
-       TLatex *label = new TLatex(
-				 x_line + 0.15,              // small x-offset to avoid overlap
-				 y_max * 0.85,               // near top of spectrum
-				 "S_{p}(^{18}F)"
-				 );
-
-      label->SetTextFont(42);
-      label->SetTextSize(0.04);
-      label->SetTextColor(kBlack);
-      label->SetTextAlign(12);        // left, vertically centered
-      label->Draw();
-    }
     cCoinTimeGatedEx->SaveAs((folderName + "/Ex_coinTime_gated.png").c_str());
-    cCoinTimeGatedEx->SaveAs((folderName + "/Ex_coinTime_gated.pdf").c_str());
 
     TCanvas *cRDTGatedEx = new TCanvas("cRDTGatedEx", "Ex gated on rdt", 800, 600);
     rdt_gatedEx->Draw();
-    StyleHistogram(rdt_gatedEx,
-		   Form("E_{x} spectrum, gated on RDT"),
-		   Form("E_{x} (MeV)"),
-		   Form("Counts / 70 keV"));
     cRDTGatedEx->SaveAs((folderName + "/Ex_rdt_gated.png").c_str());
-    cRDTGatedEx->SaveAs((folderName + "/Ex_rdt_gated.pdf").c_str());
-
-    TCanvas *cExnogates = new TCanvas("cExnogates", "Ex, no gates", 800, 600);
-    Ex_nogates->Draw();
-    StyleHistogram(Ex_nogates,
-		   Form("E_{x} spectrum, no gates"),
-		   Form("E_{x} (MeV)"),
-		   Form("Counts / 70 keV"));
-    cExnogates->SaveAs((folderName + "/Ex_nogates.png").c_str());
-    cExnogates->SaveAs((folderName + "/Ex_nogates.pdf").c_str());
 
     TCanvas *cEZnogates = new TCanvas("cEZnogates", "e vs z, no gates", 800, 600);
     EZ_nogates->Draw();
-    StyleHistogram(EZ_nogates,
-		   Form("E vs z, no gates"),
-		   Form("z (mm)"),
-		   Form("E (MeV)"), 2, false);
     cEZnogates->SaveAs((folderName + "/EZ_nogates.png").c_str());
-    cEZnogates->SaveAs((folderName + "/EZ_nogates.pdf").c_str());
-
-    TCanvas *cEZnogatesNo0 = new TCanvas("cEZnogateswithout0", "e vs z, no gates", 800, 600);
-    EZ_nogates_without0->Draw();
-    StyleHistogram(EZ_nogates_without0,
-		   Form("E vs z, no gates"),
-		   Form("z (mm)"),
-		   Form("E (MeV)"), 2, false);
-    cEZnogatesNo0->SaveAs((folderName + "/EZ_nogates_without0.pdf").c_str());
-    cEZnogatesNo0->SaveAs((folderName + "/EZ_nogates_without0.png").c_str());
 
     gStyle->SetOptStat(000);
 
     TCanvas *cEZgated = new TCanvas("cEZgated", "e vs z, gated", 800, 600);
     EZ_gated->Draw();
-    StyleHistogram(EZ_gated,
-		   Form("E vs z, gated"),
-		   Form("z (mm)"),
-		   Form("E (MeV)"));
     cEZgated->SaveAs((folderName + "/EZ_gated.png").c_str());
-    cEZgated->SaveAs((folderName + "/EZ_gated.pdf").c_str());
 
     TCanvas *cEZgatedNo0 = new TCanvas("cEZgatedNo0", "e vs z, gated", 800, 600);
     EZ_gated_without0->Draw();
-    StyleHistogram(EZ_gated_without0,
-		   Form("E vs z, gated"),
-		   Form("z (mm)"),
-		   Form("E (MeV)"));
     cEZgatedNo0->SaveAs((folderName + "/EZ_gated_without_det0.png").c_str());
-    cEZgatedNo0->SaveAs((folderName + "/EZ_gated_without_det0.pdf").c_str());
 
     TCanvas *cEZgated2turns = new TCanvas("cEZgated2turns", "e vs z, gated, 2 turns", 800, 600);
     EZ_gated_2turns->Draw();
-    StyleHistogram(EZ_gated_2turns,
-		   Form("E vs z, gated, two turns"),
-		   Form("z (mm)"),
-		   Form("E (MeV)"));
     cEZgated2turns->SaveAs((folderName + "/EZ_gated_2turns.png").c_str());
-    cEZgated2turns->SaveAs((folderName + "/EZ_gated_2turns.pdf").c_str());
 
     TCanvas *cEZgated3turns = new TCanvas("cEZgated3turns", "e vs z, gated, 3 turns", 800, 600);
     EZ_gated_3turns->Draw();
-    StyleHistogram(EZ_gated_3turns,
-		   Form("E vs z, gated, three turns"),
-		   Form("z (mm)"),
-		   Form("E (MeV)"));
     cEZgated3turns->SaveAs((folderName + "/EZ_gated_3turns.png").c_str());
-    cEZgated3turns->SaveAs((folderName + "/EZ_gated_3turns.pdf").c_str());
 
     TCanvas *cExSingleDets = new TCanvas("cExSingleDets", "Ex for each detector", 1200, 800);
     cExSingleDets->Divide(6, 4);
@@ -1188,79 +772,9 @@ void analysis_phd(){
     for (int i = 0; i < numDet; ++i) {
       cExSingleDets->cd(i + 1);
       Ex_single[i]->Draw();
-      StyleHistogram(Ex_single[i],
-		     Form("E_{x} spectrum, gated"),
-		     Form("E_{x} (MeV)"),
-		     Form("Counts / 70 keV"),
-		     1);
     }
 
     cExSingleDets->SaveAs((folderName + "/Ex_each_detector.png").c_str());
-    cExSingleDets->SaveAs((folderName + "/Ex_each_detector.pdf").c_str());
-
-    TCanvas *cExSingleDetsRDT0 = new TCanvas("cExSingleDetsRDT0", "Ex for each detector, rdt0", 1200, 800);
-    cExSingleDetsRDT0->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cExSingleDetsRDT0->cd(i + 1);
-      Ex_single_rdt0[i]->Draw();
-      StyleHistogram(Ex_single_rdt0[i],
-		     Form("E_{x} spectrum, gated on RDT0"),
-		     Form("E_{x} (MeV)"),
-		     Form("Counts / 70 keV"),
-		     1);
-    }
-
-    cExSingleDetsRDT0->SaveAs((folderName + "/Ex_each_detector_rdt0.png").c_str());
-    cExSingleDetsRDT0->SaveAs((folderName + "/Ex_each_detector_rdt0.pdf").c_str());
-
-    TCanvas *cExSingleDetsRDT1 = new TCanvas("cExSingleDetsRDT1", "Ex for each detector, rdt1", 1200, 800);
-    cExSingleDetsRDT1->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cExSingleDetsRDT1->cd(i + 1);
-      Ex_single_rdt1[i]->Draw();
-      StyleHistogram(Ex_single_rdt1[i],
-		     Form("E_{x} spectrum, gated on RDT1"),
-		     Form("E_{x} (MeV)"),
-		     Form("Counts / 70 keV"),
-		     1);
-    }
-
-    cExSingleDetsRDT1->SaveAs((folderName + "/Ex_each_detector_rdt1.png").c_str());
-    cExSingleDetsRDT1->SaveAs((folderName + "/Ex_each_detector_rdt1.pdf").c_str());
-
-    TCanvas *cExSingleDetsRDT2 = new TCanvas("cExSingleDetsRDT2", "Ex for each detector, rdt2", 1200, 800);
-    cExSingleDetsRDT2->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cExSingleDetsRDT2->cd(i + 1);
-      Ex_single_rdt2[i]->Draw();
-      StyleHistogram(Ex_single_rdt2[i],
-		     Form("E_{x} spectrum, gated on RDT2"),
-		     Form("E_{x} (MeV)"),
-		     Form("Counts / 70 keV"),
-		     1);
-    }
-
-    cExSingleDetsRDT2->SaveAs((folderName + "/Ex_each_detector_rdt2.png").c_str());
-    cExSingleDetsRDT2->SaveAs((folderName + "/Ex_each_detector_rdt2.pdf").c_str());
-
-    TCanvas *cExSingleDetsRDT3 = new TCanvas("cExSingleDetsRDT3", "Ex for each detector, rdt3", 1200, 800);
-    cExSingleDetsRDT3->Divide(6, 4);
-
-    for (int i = 0; i < numDet; ++i) {
-      cExSingleDetsRDT3->cd(i + 1);
-      Ex_single_rdt3[i]->Draw();
-      StyleHistogram(Ex_single_rdt3[i],
-		     Form("E_{x} spectrum, gated on RDT3"),
-		     Form("E_{x} (MeV)"),
-		     Form("Counts / 70 keV"),
-		     1);
-    }
-
-    cExSingleDetsRDT3->SaveAs((folderName + "/Ex_each_detector_rdt3.png").c_str());
-    cExSingleDetsRDT3->SaveAs((folderName + "/Ex_each_detector_rdt3.pdf").c_str());
     
   }
 

@@ -3,13 +3,7 @@
 #include <TCanvas.h>
 #include <iostream>
 
-void plot_F_O_N() {
-
-  gStyle->SetOptStat(0);
-  gStyle->SetTextFont(42);
-  gStyle->SetLabelFont(42,"XYZ");
-  gStyle->SetTitleFont(42,"XYZ");
-  
+void plot_F_O() {
   TFile* file1 = TFile::Open("../corrected_working/plots_17F/Ex_x_recoil_coinTime_gated.root");
   TFile* file2 = TFile::Open("../corrected_working/plots_17O/Ex_x_recoil_coinTime_gated.root");
   TFile* file3 = TFile::Open("../corrected_working/plots_17F/Ex_x_diffrecoil_coinTime_gated.root");
@@ -74,6 +68,18 @@ void plot_F_O_N() {
     }
   }
 
+  TLegend *leg = new TLegend(0.7, 0.67, 0.92, 0.898);
+  leg->AddEntry(hist1, "^{17}F(d,p)", "l");
+  leg->AddEntry(hist2_shifted, "^{17}O(d,p)", "l");
+  leg->SetBorderSize(0);
+  leg->SetFillColor(0);
+  leg->SetTextSize(0.038);
+
+  TCanvas* canvas = new TCanvas("canvas", "Histograms", 2400, 1600);
+  canvas->SetCanvasSize(2400, 1200*2);
+  canvas->Divide(1, 2, 0, 0);
+  canvas->cd(1);
+
   double norm_scale = 3.423160411;
 
   hist1->Scale(norm_scale);
@@ -86,8 +92,6 @@ void plot_F_O_N() {
 
   hist1->Add(hist3);
   hist1->Add(hist4);
-
-  hist4->Scale(7);
   
   hist1->SetLineColor(kBrightGreen);//(kDarkBlue); 		 // 17F
   hist2_shifted->SetLineColor(kBrightRed);//(kBrightGreen); // 17O
@@ -95,7 +99,7 @@ void plot_F_O_N() {
   hist3->SetLineColor(kDarkBlue); // 17F with 17O recoils
   hist4->SetLineColor(kBlack);
   hist4->SetLineColorAlpha(kBlack, 0.2);
-  hist5->SetLineColor(kMyGreen);
+  hist5->SetLineColor(kGreen);
 
   hist1->SetLineStyle(1);//(9); 		 // 17F
   hist2_shifted->SetLineStyle(1);//(7); // 17O
@@ -104,7 +108,6 @@ void plot_F_O_N() {
   hist5->SetLineStyle(1);
 
   hist2_shifted->GetYaxis()->SetRangeUser(0.01, 1870);
-  hist5->GetYaxis()->SetRangeUser(0, 1870);
 
   hist1->SetLineWidth(1); 		 // 17F
   hist2_shifted->SetLineWidth(1); // 17O
@@ -113,52 +116,41 @@ void plot_F_O_N() {
 
   std::cout << hist1->Integral() << std::endl << hist2->Integral()  << std::endl << hist2_shifted->Integral() << std::endl;
 
-  TCanvas* canvas = new TCanvas("canvas","Excitation spectra",1200,1200);
+  gPad->SetLeftMargin(0.15);   // więcej miejsca na tytuł osi Y
+  gPad->SetBottomMargin(0.0); // więcej miejsca na tytuł osi X
+  gPad->SetRightMargin(0.01);  // wąski prawy margines
+  gPad->SetTopMargin(0.1);
 
-  double left = 0.14;
-  double right = 0.03;
-  double top = 0.05;
-  double bottom = 0.14;
+  hist2_shifted->GetXaxis()->SetTitleSize(0.044);
+  hist2_shifted->GetYaxis()->SetTitleSize(0.044);
 
-  TPad *pad1 = new TPad("pad1","",0,0.5,1,1);
-  TPad *pad2 = new TPad("pad2","",0,0,1,0.5);
+  hist2_shifted->GetXaxis()->SetTitleOffset(1.2);
+  hist2_shifted->GetYaxis()->SetTitleOffset(1.5);
 
-  pad1->SetLeftMargin(left);
-  pad1->SetRightMargin(right);
-  pad1->SetTopMargin(top);
-  pad1->SetBottomMargin(0.0);
+  hist2_shifted->GetXaxis()->SetLabelSize(0.04);
+  hist2_shifted->GetYaxis()->SetLabelSize(0.04);
 
-  pad2->SetLeftMargin(left);
-  pad2->SetRightMargin(right);
-  pad2->SetTopMargin(0.0);
-  pad2->SetBottomMargin(bottom);
+  hist2_shifted->GetXaxis()->SetLabelOffset(0.01);
+  hist2_shifted->GetYaxis()->SetLabelOffset(0.01);
 
-  pad1->Draw();
-  pad2->Draw();
-
-  auto FormatAxes = [](TH1* h){
-    h->GetXaxis()->SetTitleSize(0.055);
-    h->GetYaxis()->SetTitleSize(0.055);
-    h->GetXaxis()->SetLabelSize(0.045);
-    h->GetYaxis()->SetLabelSize(0.045);
-    h->GetYaxis()->SetTitleOffset(1.35);
-    h->GetXaxis()->SetTitleOffset(1.1);
-  };
-
-  pad1->cd();
-
-  FormatAxes(hist2_shifted);
-
-  hist2_shifted->SetTitle("");
-  hist2_shifted->GetXaxis()->SetLabelSize(0);
-  hist2_shifted->GetXaxis()->SetTitle("");
-
-  hist2_shifted->GetYaxis()->SetTitle("Counts / 70 keV");
-
+  hist5->GetXaxis()->SetTitleSize(0.044);
+  hist5->GetYaxis()->SetTitleSize(0.044);
+  hist5->GetXaxis()->SetTitleOffset(1.2);
+  hist5->GetYaxis()->SetTitleOffset(1.5);
+  hist5->GetXaxis()->SetLabelSize(0.04);
+  hist5->GetYaxis()->SetLabelSize(0.04);
+  hist5->GetXaxis()->SetLabelOffset(0.01);
+  hist5->GetYaxis()->SetLabelOffset(0.01);
+    
   hist2_shifted->Draw("HIST");
+  //hist2->Draw("HIST");
   hist1->Draw("HIST SAME");
+  //hist3->Draw("HIST SAME");
+  hist2_shifted->Draw("HIST SAME");
 
-  //hist2_shifted->SetTitle("Excitation energy spectrum;E_{x} (MeV);Counts / 70 keV");
+  //hist4->Draw("HIST SAME");
+
+  hist2_shifted->SetTitle("Excitation energy spectrum;E_{x} (MeV);Counts / 70 keV");
 
   gStyle->SetOptStat(000);
 
@@ -176,30 +168,28 @@ void plot_F_O_N() {
   vline->SetLineStyle(2); // kreskowana
   vline->SetLineWidth(1);
   vline->Draw();
-  
-  TLegend *leg = new TLegend(0.6, 0.67, 0.92, 0.898);
-  leg->AddEntry(hist1, "^{17}F(d,p)", "l");
-  leg->AddEntry(hist2_shifted, "^{17}O(d,p)", "l");
-  leg->AddEntry(vline, "S_{p} of ^{18}F = 5.61 MeV", "l"); // "l" = linia
-  leg->SetBorderSize(0);
-  leg->SetFillColor(0);
-  leg->SetTextSize(0.045);
-
-  leg->Draw();
 
   TLine *vline2 = new TLine(x_line_alpha, y_min, x_line_alpha, y_max);
   vline2->SetLineColorAlpha(kBlack, 0.3);
   vline2->SetLineStyle(2); // kreskowana
   vline2->SetLineWidth(1);
 
+  TLatex latex;
+  latex.SetNDC();
+  latex.SetTextSize(0.05);
+  latex.SetTextFont(42);          // 42 = Helvetica, 62 = bold Helvetica
+  latex.SetTextColor(kRed);
+  latex.SetTextColorAlpha(kGray+2, 0.4);
+  //latex.DrawLatex(0.7, 0.5, "PRELIMINARY");
 
-  pad2->cd();
+  leg->AddEntry(vline, "S_{p} of ^{18}F = 5.61 MeV", "l"); // "l" = linia
+  //leg->AddEntry(vline2, "S_{#alpha} of ^{18}F = 4.415 MeV", "l"); // "l" = linia
 
-  FormatAxes(hist5);
+  leg->Draw();
 
-  hist5->SetTitle("");
-  hist5->GetXaxis()->SetTitle("E_{x} (MeV)");
-  hist5->GetYaxis()->SetTitle("Counts / 70 keV");
+  canvas->cd(2);
+
+  hist4->Scale(7);
 
   hist5->Draw("HIST");
   hist3->Draw("HIST SAME");
@@ -208,70 +198,28 @@ void plot_F_O_N() {
   vline->Draw();
   vline2->Draw();
 
-  TLegend *leg2 = new TLegend(0.6, 0.67, 0.92, 0.98);
+  hist5->SetTitle(";E_{x} (MeV);Counts / 70 keV");
+  hist5->GetYaxis()->SetRangeUser(0, 1870);
+
+  TLegend *leg2 = new TLegend(0.55, 0.7, 0.92, 0.898);
   leg2->AddEntry(hist5, "^{17}F(d,p) with ^{18}F recoils", "l");
   leg2->AddEntry(hist3, "^{17}F(d,p) with ^{17}O recoils", "l");
-  leg2->AddEntry(hist4, "^{17}F(d,p) with ^{14}N recoils #times 7", "l");
+  leg2->AddEntry(hist4, "^{17}F(d,p) with ^{14}N recoils x 7", "l");
   leg2->SetBorderSize(0);
   leg2->SetFillColor(0);
-  leg2->SetTextSize(0.045);
+  leg2->SetTextSize(0.038);
 
   leg2->AddEntry(vline, "S_{p} of ^{18}F = 5.61 MeV", "l"); // "l" = linia
   leg2->AddEntry(vline2, "-Q_{#alpha} of ^{18}F = 4.415 MeV", "l"); // "l" = linia
 
   leg2->Draw();
 
-  std::ofstream fout("hist1_data.txt");
-  fout << "# BinCenter Counts Error" << std::endl;
+  gPad->SetLeftMargin(0.15);   // więcej miejsca na tytuł osi Y
+  gPad->SetBottomMargin(0.18); // więcej miejsca na tytuł osi X
+  gPad->SetRightMargin(0.01);  // wąski prawy margines
+  gPad->SetTopMargin(0.0);
+  
 
-  for (int i = 1; i <= hist1->GetNbinsX(); ++i) {
-    double x = hist1->GetBinCenter(i);
-    double y = hist1->GetBinContent(i);
-    double e = hist1->GetBinError(i);
-    fout << x << " " << y << " " << e << std::endl;
-  }
-  fout.close();
-  std::ofstream fout2("hist2_shifted_data.txt");
-  fout2 << "# BinCenter Counts Error" << std::endl;
-
-  for (int i = 1; i <= hist2_shifted->GetNbinsX(); ++i) {
-    double x = hist2_shifted->GetBinCenter(i);
-    double y = hist2_shifted->GetBinContent(i);
-    double e = hist2_shifted->GetBinError(i);
-    fout2 << x << " " << y << " " << e << std::endl;
-  }
-  fout2.close();
-  std::ofstream fout3("hist3_data.txt");
-  fout3 << "# BinCenter Counts Error" << std::endl;
-
-  for (int i = 1; i <= hist3->GetNbinsX(); ++i) {
-    double x = hist3->GetBinCenter(i);
-    double y = hist3->GetBinContent(i);
-    double e = hist3->GetBinError(i);
-    fout3 << x << " " << y << " " << e << std::endl;
-  }
-  fout3.close();
-  std::ofstream fout4("hist4_data.txt");
-  fout4 << "# BinCenter Counts Error" << std::endl;
-
-  for (int i = 1; i <= hist4->GetNbinsX(); ++i) {
-    double x = hist4->GetBinCenter(i);
-    double y = hist4->GetBinContent(i);
-    double e = hist4->GetBinError(i);
-    fout4 << x << " " << y << " " << e << std::endl;
-  }
-  fout.close();
-  std::ofstream fout5("hist5_data.txt");
-  fout5 << "# BinCenter Counts Error" << std::endl;
-
-  for (int i = 1; i <= hist5->GetNbinsX(); ++i) {
-    double x = hist5->GetBinCenter(i);
-    double y = hist5->GetBinContent(i);
-    double e = hist5->GetBinError(i);
-    fout5 << x << " " << y << " " << e << std::endl;
-  }
-  fout5.close();
-
-  canvas->SaveAs("ex_F_O_N.png");
-  canvas->SaveAs("ex_F_O_N.pdf");
+  canvas->SaveAs("ex_F_O.png");
+  canvas->SaveAs("ex_F_O.pdf");
 }

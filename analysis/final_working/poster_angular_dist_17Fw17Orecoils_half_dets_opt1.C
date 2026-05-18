@@ -108,12 +108,14 @@ void poster_angular_dist_17Fw17Orecoils_half_dets_opt1() {
     {"0 #font[42]{d}_{5/2}, 0^{+}", "1 #font[42]{s}_{1/2}, 3^{+}", "1 #font[42]{p}_{3/2}, 3^{-}"},
     {"1 #font[42]{f}_{7/2}, 2^{-}"}, // 6.633 state - parity and T unknown, 6.643 - 2- state but T=1 so stronger? I don't know which state could it possibly correspond to in oxygen - maybe the 6.35 state? It's also 2-, but very weak
     {"1 #font[42]{p}_{3/2}, 1^{-}"},
-    {"1 #font[42]{s}_{3/2}, 2^{+}"}
+    {"1 #font[42]{s}_{3/2}, 2^{+}"},
+    {"1 #font[42]{p}_{3/2}, 2^{-}"},
+    {"0 #font[42]{d}_{5/2}, 2^{-}"}
   };
   titles = {"6.136 & 6.163 MeV", "6.136 & 6.163 MeV - 0.25", "6.136 & 6.163 MeV - 0.5", "6.136 & 6.163 MeV - 0.75",
 	    "6.136 & 6.163 MeV - 1.", "6.136 & 6.163 MeV - 1.25", "6.136 & 6.163 MeV - 1.5", "6.136 & 6.163 MeV - 1.75",
 	    "6.136 & 6.163 MeV - 2", "6.136 & 6.163 MeV - 2.25", "6.136 & 6.163 MeV - 2.5", "6.136 & 6.163 MeV",
-	    "6.643 MeV", "5.6 MeV", "5.6 MeV"};
+	    "6.643 MeV", "5.6 MeV", "5.6 MeV", "6.643 MeV", "6.643 MeV"};
 
   std::vector<TGraph*> graphs;
 
@@ -175,7 +177,9 @@ void poster_angular_dist_17Fw17Orecoils_half_dets_opt1() {
     {ex6136_6163_half_dets, {37, 38, 39}},
     {ex6633_6643_half_dets, {2}},
     {ex5600_full_dets, {40}},
-    {ex5600_full_dets, {41}}
+    {ex5600_full_dets, {41}},
+    {ex6633_6643_half_dets, {42}},
+    {ex6633_6643_half_dets, {43}}
   };
   fitPairs =  {
     {{0, 1, 6}},
@@ -192,7 +196,9 @@ void poster_angular_dist_17Fw17Orecoils_half_dets_opt1() {
     {{37, 38, 39}},
     {{2}},
     {{40}},
-    {{41}}
+    {{41}},
+    {{42}},
+    {{43}}
   };
 
   std::vector<int> color = {629, 596, 418, 801, 905, 8, 9, 1};

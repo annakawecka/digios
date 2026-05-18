@@ -247,13 +247,13 @@ void poster_angular_dist_17Fw17Orecoils_half_dets_opt1_sd() {
 
     experimentGraph->Draw("APE1");
 
-    experimentGraph->GetHistogram()->GetXaxis()->SetRangeUser(0, 60);
-    experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(.01, 100);
+    experimentGraph->GetHistogram()->GetXaxis()->SetRangeUser(0, 45);
+    experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(.1, 100);
     if (mappingIndex == 2)
       experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(.4, 120);
 
     TAxis *axis = experimentGraph->GetXaxis();
-    axis->SetLimits(0.,60.);
+    axis->SetLimits(0.,45.);
     
     //experimentGraph->SetTitle(Form("Ex = %.3f MeV;#theta_{CM} (deg);d#sigma/d#Omega (a. u.)", Ex_values[mappingIndex]));
     experimentGraph->SetTitle(Form("%s;#theta_{CM} (deg);d#sigma/d#Omega (arb. units)", titles[mappingIndex].Data()));

@@ -16,6 +16,8 @@
 std::vector<TGraph*> graphsDWBA;
 int nr_of_functions = 0;
 int functions_ids[10] = {0,0,0,0,0,0,0,0,0,0};
+double min_y[13] = {0.2, 0.2, 2, 0.1, 0.1, 0.1, 1, 1, 1, 0.2, 0.1, 0.5, 0.2};
+double max_y[13] = {110, 110, 110, 110, 10, 10, 10, 10, 10, 50, 30, 10, 10};
 
 std::vector<TString> potentials = {
   "AK", "AV", "AM", "AG", "AP",
@@ -305,13 +307,13 @@ void poster_angular_dist_17O_half_dets_opt1() {
 
     experimentGraph->Draw("APE1 SAME");
 
-    experimentGraph->GetHistogram()->GetXaxis()->SetRangeUser(0, 60);
-    experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(.01, 180);
+    experimentGraph->GetHistogram()->GetXaxis()->SetRangeUser(0, 45);
+    experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(min_y[mappingIndex], max_y[mappingIndex]);
     //if (mappingIndex == 2)
       //experimentGraph->GetHistogram()->GetYaxis()->SetRangeUser(.4, 120);
 
     TAxis *axis = experimentGraph->GetXaxis();
-    axis->SetLimits(0.,60.);
+    axis->SetLimits(0.,45.);
     
     experimentGraph->SetTitle(Form("%s;#theta_{CM} (deg);d#sigma/d#Omega (arb. units)", titles[mappingIndex].Data()));
 
@@ -449,6 +451,8 @@ void poster_angular_dist_17O_half_dets_opt1() {
     TString outputFilename = Form("%s/fit_Ex_%lu.png", outputDir.Data(), mappingIndex + 1);
     canvas->SaveAs(outputFilename);
     outputFilename = Form("%s/fit_Ex_%lu.pdf", outputDir.Data(), mappingIndex + 1);
+    canvas->SaveAs(outputFilename);
+    outputFilename = Form("%s/fit_Ex_%lu.root", outputDir.Data(), mappingIndex + 1);
     canvas->SaveAs(outputFilename);
   }
   
